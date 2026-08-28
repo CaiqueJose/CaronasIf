@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - Carona IF</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+
+    <h1>Criar Conta</h1>
+
+    <form method="post">
+        {% csrf_token %}
+
+        {{ form.as_p }}
+
+        <button type="submit">Cadastrar</button>
+    </form>
+
+    <p>Já tem uma conta? <a href="{% url 'login' %}">Entrar</a></p>
+
+</body>
+</html>
