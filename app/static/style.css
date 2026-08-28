@@ -6,80 +6,129 @@
 }
 
 body {
-    background-color: #f4f4f4;
+    background-color: #f8fafc;
     color: #333;
-}
-
-header {
-    background-color: #198754;
-    color: white;
-    padding: 20px 40px;
-}
-
-nav {
-    max-width: 1100px;
-    margin: auto;
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: center;
-}
-
-nav h1 {
-    font-size: 24px;
-}
-
-nav a {
-    color: white;
-    text-decoration: none;
-    margin-left: 20px;
-}
-
-nav a:hover {
-    text-decoration: underline;
-}
-
-main {
-    max-width: 1100px;
-    margin: 60px auto;
+    justify-content: center;
+    min-height: 100vh;
     padding: 20px;
 }
 
-.principal {
-    background-color: white;
-    padding: 50px;
+/* Header / Logo */
+.header-logo {
     text-align: center;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
 }
 
-.principal h2 {
-    font-size: 32px;
-    margin-bottom: 15px;
-    color: #198754;
+.header-logo h1 {
+    color: #2e7d32;
+    font-size: 28px;
 }
 
-.principal p {
-    font-size: 18px;
-    margin-bottom: 25px;
+.header-logo p {
     color: #666;
+    font-size: 14px;
 }
 
-.botoes a {
-    display: inline-block;
-    background-color: #198754;
-    color: white;
-    text-decoration: none;
-    padding: 12px 20px;
-    margin: 5px;
+/* Card central */
+.card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 25px;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.card h2 {
+    font-size: 18px;
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* Campos do formulário */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 13px;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #444;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
     border-radius: 5px;
+    font-size: 14px;
+    outline: none;
 }
 
-.botoes a:hover {
-    background-color: #146c43;
+.form-group input:focus {
+    border-color: #2e7d32;
+}
+
+.esqueci-senha {
+    display: block;
+    text-align: right;
+    font-size: 12px;
+    color: #2e7d32;
+    text-decoration: none;
+    margin-top: 5px;
+}
+
+/* Botões */
+.btn-primary {
+    width: 100%;
+    background-color: #2e7d32;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.btn-primary:hover {
+    background-color: #256628;
+}
+
+.btn-secondary {
+    display: block;
+    width: 100%;
+    text-align: center;
+    border: 1px solid #2e7d32;
+    color: #2e7d32;
+    padding: 10px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.btn-secondary:hover {
+    background-color: #f0fdf4;
+}
+
+.divider {
+    text-align: center;
+    margin: 15px 0;
+    color: #888;
+    font-size: 13px;
 }
 
 footer {
-    text-align: center;
-    margin-top: 50px;
-    color: #777;
+    margin-top: 25px;
+    color: #888;
+    font-size: 12px;
 }
