@@ -13,23 +13,27 @@ body {
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    padding: 20px;
+    padding: 20px 15px;
+    width: 100%;
 }
 
 /* Header / Logo */
 .header-logo {
     text-align: center;
     margin-bottom: 20px;
+    width: 90%;
+    max-width: 400px;
 }
 
 .header-logo h1 {
     color: #2e7d32;
-    font-size: 28px;
+    font-size: clamp(20px, 5vw, 28px);
+    word-break: break-word;
 }
 
 .header-logo p {
     color: #666;
-    font-size: 14px;
+    font-size: clamp(12px, 3vw, 14px);
 }
 
 /* Card central */
@@ -38,13 +42,13 @@ body {
     border: 1px solid #e2e8f0;
     border-radius: 10px;
     padding: 25px;
-    width: 100%;
-    max-width: 380px;
+    width: 90%;
+    max-width: 400px; /* Trava o tamanho máximo para não explodir no zoom */
     box-shadow: 0 4px 6px rgba(0,0,0,0.05);
 }
 
 .card h2 {
-    font-size: 18px;
+    font-size: clamp(16px, 4vw, 18px);
     text-align: center;
     margin-bottom: 20px;
     color: #333;
@@ -53,6 +57,7 @@ body {
 /* Campos do formulário */
 .form-group {
     margin-bottom: 15px;
+    width: 100%;
 }
 
 .form-group label {
@@ -63,17 +68,23 @@ body {
     color: #444;
 }
 
-.form-group input {
+.form-group input,
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="tel"],
+.form-group input[type="password"] {
     width: 100%;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
     font-size: 14px;
     outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .form-group input:focus {
     border-color: #2e7d32;
+    box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
 }
 
 .esqueci-senha {
@@ -83,6 +94,10 @@ body {
     color: #2e7d32;
     text-decoration: none;
     margin-top: 5px;
+}
+
+.esqueci-senha:hover {
+    text-decoration: underline;
 }
 
 /* Botões */
@@ -97,6 +112,7 @@ body {
     font-weight: bold;
     cursor: pointer;
     margin-top: 10px;
+    transition: background-color 0.2s ease;
 }
 
 .btn-primary:hover {
@@ -114,6 +130,7 @@ body {
     text-decoration: none;
     font-size: 14px;
     font-weight: bold;
+    transition: background-color 0.2s ease;
 }
 
 .btn-secondary:hover {
@@ -131,4 +148,13 @@ footer {
     margin-top: 25px;
     color: #888;
     font-size: 12px;
+    text-align: center;
+    width: 100%;
+}
+
+/* Ajuste para quando houver muito zoom vertical */
+@media screen and (max-height: 600px) {
+    body {
+        justify-content: flex-start;
+    }
 }

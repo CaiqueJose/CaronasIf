@@ -1,25 +1,62 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <!-- ESSENCIAL PARA RESPONSIVIDADE -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro - Carona IF</title>
-    {% load static %}
+    <title>Cadastro - Caronas IF</title>
     <link rel="stylesheet" href="{% static 'style.css' %}">
 </head>
 <body>
 
-    <h1>Criar Conta</h1>
+    <div class="header-logo">
+        <h1>Caronas IF</h1>
+        <p>Soluções de transporte compartilhado do IF</p>
+    </div>
 
-    <form method="post">
-        {% csrf_token %}
+    <div class="card">
+        <h2>Criar conta</h2>
 
-        {{ form.as_p }}
+        <form method="post">
+            {% csrf_token %}
 
-        <button type="submit">Cadastrar</button>
-    </form>
+            <div class="form-group">
+                <label for="id_nome">Nome Completo</label>
+                <input type="text" name="nome" id="id_nome" placeholder="Seu nome completo" required>
+            </div>
 
-    <p>Já tem uma conta? <a href="{% url 'login' %}">Entrar</a></p>
+            <div class="form-group">
+                <label for="id_email">E-mail Institucional</label>
+                <input type="email" name="email" id="id_email" placeholder="seu.email@ifsuldeminas.edu.br" required>
+            </div>
+
+            <div class="form-group">
+                <label for="id_telefone">Telefone / WhatsApp</label>
+                <input type="tel" name="telefone" id="id_telefone" placeholder="(35) 99999-9999" required>
+            </div>
+
+            <div class="form-group">
+                <label for="id_password">Senha</label>
+                <input type="password" name="password" id="id_password" placeholder="Crie uma senha" required>
+            </div>
+
+            <div class="form-group">
+                <label for="id_confirm_password">Confirmar Senha</label>
+                <input type="password" name="confirm_password" id="id_confirm_password" placeholder="Repita a senha" required>
+            </div>
+
+            <button type="submit" class="btn-primary">Cadastrar</button>
+        </form>
+
+        <div class="divider">ou</div>
+
+        <a href="{% url 'login' %}" class="btn-secondary">Já tem uma conta? Entrar</a>
+    </div>
+
+    <footer>
+        &copy; 2026 Caronas IF. Todos os direitos reservados.
+    </footer>
 
 </body>
 </html>
