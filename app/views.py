@@ -5,12 +5,35 @@ from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
 from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
+import time
 
-@login_required
+
+@require_POST
+def registrar_atividade(request):
+
+    if not request.user.is_authenticated:
+        return JsonResponse(
+            {"autenticado": False},
+            status=401
+        )
+
+    request.session["ultima_atividade"] = time.time()
+
+    return JsonResponse({
+        "autenticado": True
+    })
+
+
 def verificar_sessao(request):
-    return JsonResponse({"autenticado": True})
+    if request.user.is_authenticated:
+        return JsonResponse({"autenticado": True})
 
+    return JsonResponse(
+        {"autenticado": False},
+        status=401
+    )
+    
 class RegisterView(View):
     def get(self, request):
         form = CadastroForm()
