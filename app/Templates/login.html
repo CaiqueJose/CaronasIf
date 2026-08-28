@@ -1,22 +1,47 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Caronas IF</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
 </head>
 <body>
 
-    <h1>Login</h1>
+    <div class="header-logo">
+        <h1>Caronas IF</h1>
+        <p>Soluções de transporte compartilhado do IF</p>
+    </div>
 
-    <form method="post">
-        {% csrf_token %}
+    <div class="card">
+        <h2>Entrar na sua conta</h2>
 
-        {{ form.as_p }}
+        <form method="post">
+            {% csrf_token %}
 
-        <button type="submit">Entrar</button>
-    </form>
+            <div class="form-group">
+                <label for="id_username">E-mail</label>
+                <input type="email" name="username" id="id_username" placeholder="seu@email.com" required>
+            </div>
 
-    <p>Não tem uma conta? <a href="{% url 'cadastro' %}">Cadastrar-se</a></p>
+            <div class="form-group">
+                <label for="id_password">Senha</label>
+                <input type="password" name="password" id="id_password" placeholder="Sua senha" required>
+                <a href="#" class="esqueci-senha">Esqueceu sua senha?</a>
+            </div>
+
+            <button type="submit" class="btn-primary">Entrar</button>
+        </form>
+
+        <div class="divider">ou</div>
+
+        <a href="{% url 'cadastro' %}" class="btn-secondary">Criar conta</a>
+    </div>
+
+    <footer>
+        &copy; 2026 Caronas IF. Todos os direitos reservados.
+    </footer>
 
 </body>
 </html>
