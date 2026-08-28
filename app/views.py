@@ -1,11 +1,15 @@
-from django.contrib.auth.decorators import login_required
 from .forms import CadastroForm
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from .models import *
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
 
+@login_required
+def verificar_sessao(request):
+    return JsonResponse({"autenticado": True})
 
 class RegisterView(View):
     def get(self, request):
@@ -24,11 +28,6 @@ class IndexView(LoginRequiredMixin, TemplateView):
     template_name = "index.html"
     login_url = "/login/"
 
-    def dispatch(self, request, *args, **kwargs):
-        print("USUÁRIO:", request.user)
-        print("AUTENTICADO:", request.user.is_authenticated)
-
-        return super().dispatch(request, *args, **kwargs)
 class CaronaView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         caronas = Carona.objects.all()
