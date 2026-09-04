@@ -16,21 +16,66 @@
     <div class="card">
         <h2>Entrar na sua conta</h2>
 
-        <form method="post">
-            {% csrf_token %}
-
+        <form method="post"> {% csrf_token %}
+            
             <div class="form-group">
-                <label for="id_username">Usuário ou E-mail</label>
-                <input type="text" name="username" id="id_username" placeholder="Usuário ou e-mail" required>
+                <label for="id_username">
+                    Usuário ou E-mail
+                </label>
+            
+                <input
+                    type="text"
+                    name="username"
+                    id="id_username"
+                    placeholder="Usuário ou e-mail"
+                    value="{{ form.username.value|default:'' }}"
+                    required
+                >
+            
+                {% if form.username.errors %}
+                    <div class="error-message">
+                        {% for error in form.username.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="id_password">
+                    Senha
+                </label>
+            
+                <input
+                    type="password"
+                    name="password"
+                    id="id_password"
+                    placeholder="Digite sua senha"
+                    required
+                >
+            
+                {% if form.password.errors %}
+                    <div class="error-message">
+                        {% for error in form.password.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
             </div>
 
-            <div class="form-group">
-                <label for="id_password">Senha</label>
-                <input type="password" name="password" id="id_password" placeholder="Sua senha" required>
-                <a href="#" class="esqueci-senha">Esqueceu sua senha?</a>
-            </div>
+            {% if form.non_field_errors %}
+                <div class="error-message">
+                    {% for error in form.non_field_errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
 
-            <button type="submit" class="btn-primary">Entrar</button>
+            
+            <button type="submit" class="btn-primary">
+                Entrar
+            </button>
+            
         </form>
 
         <div class="divider">ou</div>

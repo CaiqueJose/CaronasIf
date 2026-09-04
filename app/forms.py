@@ -69,6 +69,9 @@ class LoginForm(AuthenticationForm):
             }
         )
     )
+    
+    def confirm_login_allowed(self, user):
+        super().confirm_login_allowed(user)
 
     def clean(self):
 
@@ -88,5 +91,11 @@ class LoginForm(AuthenticationForm):
 
             except User.DoesNotExist:
                 pass
+            
+        try:
+            return super().clean()
 
-        return super().clean()
+        except forms.ValidationError:
+            raise forms.ValidationError(
+                "Usuário/e-mail ou senha incorretos."
+            )

@@ -4,21 +4,219 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro - Carona IF</title>
+
+    <title>Cadastro - Caronas IF</title>
+
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
+
 <body>
-    <h1>Criar Conta</h1>
 
-    <form method="post">
-        {% csrf_token %}
+    <div class="header-logo">
+        <h1>Caronas IF</h1>
+        <p>Soluções de transporte compartilhado do IF</p>
+    </div>
 
-        {{ form.as_p }}
 
-        <button type="submit">Cadastrar</button>
-    </form>
+    <div class="card">
 
-    <p>Já tem uma conta? <a href="{% url 'login' %}">Entrar</a></p>
+        <h2>Criar conta</h2>
+
+        <form method="post">
+
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="error-message">
+                    {% for error in form.non_field_errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="form-group">
+
+                <label for="id_username">
+                    Usuário
+                </label>
+
+                <input
+                    type="text"
+                    name="username"
+                    id="id_username"
+                    placeholder="Escolha um nome de usuário"
+                    value="{{ form.username.value|default:'' }}"
+                    required
+                >
+
+                {% if form.username.errors %}
+                    <div class="error-message">
+                        {% for error in form.username.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="id_first_name">
+                    Nome
+                </label>
+
+                <input
+                    type="text"
+                    name="first_name"
+                    id="id_first_name"
+                    placeholder="Seu nome"
+                    value="{{ form.first_name.value|default:'' }}"
+                    required
+                >
+
+                {% if form.first_name.errors %}
+                    <div class="error-message">
+                        {% for error in form.first_name.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+            </div>
+
+
+            <!-- SOBRENOME -->
+
+            <div class="form-group">
+
+                <label for="id_last_name">
+                    Sobrenome
+                </label>
+
+                <input
+                    type="text"
+                    name="last_name"
+                    id="id_last_name"
+                    placeholder="Seu sobrenome"
+                    value="{{ form.last_name.value|default:'' }}"
+                    required
+                >
+
+                {% if form.last_name.errors %}
+                    <div class="error-message">
+                        {% for error in form.last_name.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+            </div>
+
+
+            <!-- E-MAIL -->
+
+            <div class="form-group">
+
+                <label for="id_email">
+                    E-mail Institucional
+                </label>
+
+                <input
+                    type="email"
+                    name="email"
+                    id="id_email"
+                    placeholder="seu.email@ifsuldeminas.edu.br"
+                    value="{{ form.email.value|default:'' }}"
+                    required
+                >
+
+                {% if form.email.errors %}
+                    <div class="error-message">
+                        {% for error in form.email.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+            </div>
+
+
+            <!-- SENHA -->
+
+            <div class="form-group">
+
+                <label for="id_password1">
+                    Senha
+                </label>
+
+                <input
+                    type="password"
+                    name="password1"
+                    id="id_password1"
+                    placeholder="Crie uma senha"
+                    required
+                >
+
+                {% if form.password1.errors %}
+                    <div class="error-message">
+                        {% for error in form.password1.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+            </div>
+
+
+            <!-- CONFIRMAR SENHA -->
+
+            <div class="form-group">
+
+                <label for="id_password2">
+                    Confirmar Senha
+                </label>
+
+                <input
+                    type="password"
+                    name="password2"
+                    id="id_password2"
+                    placeholder="Repita a senha"
+                    required
+                >
+
+                {% if form.password2.errors %}
+                    <div class="error-message">
+                        {% for error in form.password2.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+            </div>
+
+
+            <button type="submit" class="btn-primary">
+                Cadastrar
+            </button>
+
+        </form>
+
+
+        <div class="divider">
+            ou
+        </div>
+
+
+        <a href="{% url 'login' %}" class="btn-secondary">
+            Já tem uma conta? Entrar
+        </a>
+
+    </div>
+
+
+    <footer>
+        &copy; 2026 Caronas IF. Todos os direitos reservados.
+    </footer>
 
 </body>
 </html>

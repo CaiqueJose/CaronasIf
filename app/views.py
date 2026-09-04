@@ -33,7 +33,8 @@ def verificar_sessao(request):
         {"autenticado": False},
         status=401
     )
-    
+
+
 class RegisterView(View):
     def get(self, request):
         form = CadastroForm()
@@ -51,32 +52,44 @@ class IndexView(LoginRequiredMixin, TemplateView):
     template_name = "index.html"
     login_url = "/login/"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Busca todas as caronas do banco de dados ordenando pelas mais recentes
+        context['caronas'] = Carona.objects.all().order_by('-dataHora')
+        return context
+
+
 class CaronaView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         caronas = Carona.objects.all()
-        return render(request, 'carona.html', {'caronas':caronas})
+        return render(request, 'carona.html', {'caronas': caronas})
+
 
 class ChatView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         chats = Chat.objects.all()
-        return render(request, 'chat.html', {'chats':chats})
+        return render(request, 'chat.html', {'chats': chats})
+
 
 class AvaliacaoView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         avaliacoes = Avaliacao.objects.all()
-        return render(request, 'avaliacao.html', {'avaliacoes':avaliacoes})
+        return render(request, 'avaliacao.html', {'avaliacoes': avaliacoes})
+
 
 class PaisView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         paises = Pais.objects.all()
-        return render(request, 'pais.html', {'paises':paises})
+        return render(request, 'pais.html', {'paises': paises})
+
 
 class EstadoView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         estados = Estado.objects.all()
-        return render(request, 'estado.html', {'estados':estados})
+        return render(request, 'estado.html', {'estados': estados})
+
 
 class CidadeView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         cidades = Cidade.objects.all()
-        return render(request, 'cidade.html', {'cidades':cidades})
+        return render(request, 'cidade.html', {'cidades': cidades})

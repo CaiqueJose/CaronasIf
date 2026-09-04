@@ -8,16 +8,12 @@
 body {
     background-color: #f8fafc;
     color: #333;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
     min-height: 100vh;
-    padding: 20px;
 }
 
 .header-logo {
     text-align: center;
+    margin-top: 40px;
     margin-bottom: 20px;
 }
 
@@ -37,8 +33,9 @@ body {
     border-radius: 10px;
     padding: 25px;
     width: 100%;
-    max-width: 380px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    max-width: 400px;
+    margin: 0 auto 40px auto;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 .card h2 {
@@ -60,16 +57,22 @@ body {
     color: #444;
 }
 
-.form-group input {
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="tel"],
+.form-group input[type="password"],
+.form-group select {
     width: 100%;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
     font-size: 14px;
     outline: none;
+    transition: border-color 0.2s;
 }
 
-.form-group input:focus {
+.form-group input:focus,
+.form-group select:focus {
     border-color: #2e7d32;
 }
 
@@ -80,6 +83,25 @@ body {
     color: #2e7d32;
     text-decoration: none;
     margin-top: 5px;
+}
+
+.esqueci-senha:hover {
+    text-decoration: underline;
+}
+
+.error-message {
+    background-color: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #ef4444;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 10px 0 15px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.error-message p {
+    margin: 0;
 }
 
 .btn-primary {
@@ -93,6 +115,9 @@ body {
     font-weight: bold;
     cursor: pointer;
     margin-top: 10px;
+    transition: background-color 0.2s;
+    text-align: center;
+    display: inline-block;
 }
 
 .btn-primary:hover {
@@ -110,6 +135,7 @@ body {
     text-decoration: none;
     font-size: 14px;
     font-weight: bold;
+    transition: background-color 0.2s;
 }
 
 .btn-secondary:hover {
@@ -127,4 +153,238 @@ footer {
     margin-top: 25px;
     color: #888;
     font-size: 12px;
+    text-align: center;
+}
+.app-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 240px;
+    background-color: #ffffff;
+    border-right: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+}
+
+.sidebar-brand h2 {
+    color: #2e7d32;
+    font-size: 22px;
+    margin-bottom: 30px;
+}
+
+.sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    color: #555;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.menu-item:hover, 
+.menu-item.active {
+    background-color: #f0fdf4;
+    color: #2e7d32;
+}
+
+.sidebar-footer {
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+}
+
+.main-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.top-header {
+    height: 60px;
+    background-color: #fff;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 30px;
+}
+
+.user-profile {
+    font-weight: bold;
+    color: #333;
+}
+
+.dashboard-content {
+    display: flex;
+    padding: 30px;
+    gap: 25px;
+}
+
+.feed-section {
+    flex: 1;
+}
+
+.welcome-banner {
+    background-color: #e8f5e9;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 25px;
+}
+
+.greeting {
+    color: #666;
+    font-size: 14px;
+}
+
+.welcome-banner h1 {
+    color: #1b5e20;
+    font-size: 22px;
+    margin: 8px 0;
+}
+
+.subtitle {
+    color: #555;
+    font-size: 13px;
+}
+
+.section-header h2 {
+    font-size: 18px;
+    margin-bottom: 15px;
+}
+
+.caronas-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.carona-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.driver-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.avatar-placeholder {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background-color: #2e7d32;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.badge-verified {
+    font-size: 11px;
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-top: 4px;
+}
+
+.route-info h3 {
+    font-size: 16px;
+    color: #222;
+}
+
+.schedule, 
+.spots {
+    font-size: 13px;
+    color: #666;
+    margin-top: 4px;
+}
+
+.price-action {
+    text-align: right;
+}
+
+.amount {
+    display: block;
+    font-size: 18px;
+    font-weight: bold;
+    color: #2e7d32;
+}
+
+.per-seat {
+    font-size: 11px;
+    color: #888;
+}
+
+.btn-primary-sm {
+    display: inline-block;
+    margin-top: 8px;
+    background-color: #2e7d32;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.btn-primary-sm:hover {
+    background-color: #256628;
+}
+
+.empty-state {
+    background: white;
+    padding: 30px;
+    text-align: center;
+    border-radius: 10px;
+    color: #777;
+    border: 1px dashed #ccc;
+}
+
+.filters-sidebar {
+    width: 280px;
+}
+
+.filters-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.filters-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.clear-filters {
+    font-size: 12px;
+    color: #2e7d32;
+    text-decoration: none;
+}
+
+.clear-filters:hover {
+    text-decoration: underline;
 }

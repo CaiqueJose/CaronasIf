@@ -1,53 +1,124 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Carona IF</title>
-    {% load static %}
-
-    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <title>Início - Caronas IF</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
-
 <body>
 
-    <header>
-        <nav>
-            <h1>Carona IF</h1>
+<div class="app-container">
 
-            <div>
-                <a href="/">Início</a>
-                <a href="/caronas/">Caronas</a>
-                <a href="/chats/">Chats</a>
-                <a href="/avaliacoes/">Avaliações</a>
-                <a href="/admin/">Admin</a>
-            </div>
+    <!-- Sidebar Esquerda -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <h2>Caronas IF</h2>
+        </div>
+        <nav class="sidebar-menu">
+            <a href="{% url 'index' %}" class="menu-item active">Início</a>
+            <a href="{% url 'caronas' %}" class="menu-item">Minhas Caronas</a>
+            <a href="#" class="menu-item">Buscar Caronas</a>
+            <a href="{% url 'chats' %}" class="menu-item">Mensagens</a>
+            <a href="{% url 'avaliacoes' %}" class="menu-item">Avaliações</a>
         </nav>
-    </header>
+        <div class="sidebar-footer">
+            <a href="{% url 'logout' %}" class="menu-item">Sair</a>
+        </div>
+    </aside>
 
-    <main>
-
-        <section class="principal">
-
-            <h2>Bem-vindo ao Carona IF</h2>
-
-            <p>
-                Encontre e compartilhe caronas de forma simples e rápida.
-            </p>
-
-            <div class="botoes">
-                <a href="/caronas/">Ver Caronas</a>
-                <a href="/admin/">Área Administrativa</a>
+    <!-- Conteúdo Principal -->
+    <div class="main-wrapper">
+        <header class="top-header">
+            <div></div>
+            <div class="user-profile">
+                <span>{{ request.user.username }}</span>
             </div>
+        </header>
 
-        </section>
+        <main class="dashboard-content">
+            <!-- Feed Central de Caronas -->
+            <section class="feed-section">
+                <div class="welcome-banner">
+                    <span class="greeting">Olá, {{ request.user.username }}! 👋</span>
+                    <h1>Encontre caronas para viajar com economia e segurança</h1>
+                    <p class="subtitle">Veja as caronas disponíveis perto de Muzambinho e vá junto!</p>
+                </div>
 
-    </main>
+                <div class="section-header">
+                    <h2>Caronas disponíveis</h2>
+                </div>
 
-    <footer>
-        <p>Carona IF - Soluções de transporte compartilhado do IFSULDEMINAS Campus Muzambinho</p>
-    </footer>
+                <div class="caronas-list">
+                    {% for carona in caronas %}
+                        <div class="carona-card">
+                            <div class="driver-info">
+                                <div class="avatar-placeholder">
+                                    {{ carona.motorista.username|first|upper }}
+                                </div>
+                                <div>
+                                    <span class="driver-name">{{ carona.motorista.username }}</span>
+                                    <span class="badge-verified">Verificado</span>
+                                </div>
+                            </div>
+
+                            <div class="route-info">
+                                <h3>{{ carona.origem }} ➔ {{ carona.destino }}</h3>
+                                <p class="schedule">📅 {{ carona.dataHora|date:"d/m/Y - H:i" }}</p>
+                                <p class="spots">👥 {{ carona.vagas_disponiveis }} vagas restantes</p>
+                            </div>
+
+                            <div class="price-action">
+                                <span class="amount">R$ {{ carona.preco }}</span>
+                                <span class="per-seat">por assento</span>
+                                <a href="#" class="btn-primary-sm">Solicitar</a>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="empty-state">
+                            <p>Nenhuma carona disponível no momento.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <!-- Sidebar Direita de Filtros -->
+            <aside class="filters-sidebar">
+                <div class="filters-card">
+                    <div class="filters-header">
+                        <h3>Filtros</h3>
+                        <a href="{% url 'index' %}" class="clear-filters">Limpar</a>
+                    </div>
+                    <form method="GET" action="{% url 'index' %}">
+                        <div class="form-group">
+                            <label for="destino">Destino</label>
+                            <input type="text" id="destino" name="destino" placeholder="Para onde você vai?">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="data">Data</label>
+                            <input type="date" id="data" name="data">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="horario">Horário</label>
+                            <select id="horario" name="horario">
+                                <option value="">Qualquer horário</option>
+                                <option value="manha">Manhã (06:00 - 12:00)</option>
+                                <option value="tarde">Tarde (12:00 - 18:00)</option>
+                                <option value="noite">Noite (18:00 - 00:00)</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn-primary">Filtrar</button>
+                    </form>
+                </div>
+            </aside>
+        </main>
+    </div>
+
+</div>
 
 </body>
 </html>
