@@ -61,4 +61,4 @@ setInterval(function () {
 
     });
 
-}, 10000);
+}, 50000);

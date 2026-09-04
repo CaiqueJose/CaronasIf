@@ -6,6 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from django.db.models import Avg
 import time
 
 
@@ -54,10 +55,14 @@ class IndexView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Busca todas as caronas do banco de dados ordenando pelas mais recentes
-        context['caronas'] = Carona.objects.all().order_by('-dataHora')
-        return context
 
+        caronas = Carona.objects.select_related("motorista").annotate(
+            media_avaliacao=Avg("motorista__avaliacoes__nota")
+        )
+
+        context["caronas"] = caronas
+
+        return context
 
 class CaronaView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
@@ -93,3 +98,10 @@ class CidadeView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         cidades = Cidade.objects.all()
         return render(request, 'cidade.html', {'cidades': cidades})
+    
+class DestinoView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        destinos = Destino.objects.all()
+        return render(request, 'destino.html', {
+            'destinos': destinos
+        })

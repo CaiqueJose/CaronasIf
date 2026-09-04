@@ -1,11 +1,22 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+class Destino(models.Model):
+    nome = models.CharField(max_length=50, verbose_name="Nome do Destino")
+    
+    def __str__(self):
+        return str(self.nome)
+    
+    class Meta:
+        verbose_name = "Destino"
+        verbose_name_plural = "Destinos"
+
+    
 
 class Carona(models.Model):
     motorista = models.ForeignKey(User, on_delete=models.CASCADE, related_name="caronas", verbose_name="Motorista", null=True, blank=True)
     origem = models.CharField(max_length=99, verbose_name="Origem da Carona")
-    destino = models.CharField(max_length=99, verbose_name="Destino da Carona", default="Muzambinho")
+    destino = models.ForeignKey(Destino, on_delete=models.CASCADE, verbose_name="Local do destino", null=True, blank=True)
     dataHora = models.DateTimeField(verbose_name="Data e Hora da Carona")
     valor = models.DecimalField(decimal_places=2, max_digits=5, verbose_name="Valor da Carona")
     vagas = models.IntegerField(verbose_name="Vagas Disponíveis")
@@ -33,6 +44,7 @@ class Chat(models.Model):
 class Avaliacao(models.Model):
     nota = models.IntegerField(verbose_name="Nota da Avaliação")
     comentario = models.TextField(max_length=99, verbose_name="Comentário da Avaliação")
+    motorista = models.ForeignKey(User, on_delete=models.CASCADE, related_name="avaliacoes", verbose_name="Motorista", null=True, blank=True)
 
     def __str__(self):
         return str(self.nota)

@@ -22,6 +22,7 @@
             <a href="#" class="menu-item">Buscar Caronas</a>
             <a href="{% url 'chats' %}" class="menu-item">Mensagens</a>
             <a href="{% url 'avaliacoes' %}" class="menu-item">Avaliações</a>
+            <a href="{% url 'destinos' %}" class="menu-item">Destinos</a>
         </nav>
         <div class="sidebar-footer">
             <a href="{% url 'logout' %}" class="menu-item">Sair</a>
@@ -55,7 +56,15 @@
                         <div class="carona-card">
                             <div class="driver-info">
                                 <div class="avatar-placeholder">
-                                    {{ carona.motorista.username|first|upper }}
+                                    {{ carona.motorista.username|first|upper }}                               
+                                </div>
+                                <div class="avaliacao">
+                                    {% if carona.media_avaliacao %}
+                                        ⭐ {{ carona.media_avaliacao|floatformat:1 }}
+                                    {% else %}
+                                        Sem avaliações
+                                    {% endif %}
+
                                 </div>
                                 <div>
                                     <span class="driver-name">{{ carona.motorista.username }}</span>
@@ -64,13 +73,13 @@
                             </div>
 
                             <div class="route-info">
-                                <h3>{{ carona.origem }} ➔ {{ carona.destino }}</h3>
+                                <h3>{{ carona.origem }} ➔ IF Sul de Minas Muzambinho</h3>
                                 <p class="schedule">📅 {{ carona.dataHora|date:"d/m/Y - H:i" }}</p>
-                                <p class="spots">👥 {{ carona.vagas_disponiveis }} vagas restantes</p>
+                                <p class="spots">👥 {{ carona.vagas }} vagas restantes</p>
                             </div>
 
                             <div class="price-action">
-                                <span class="amount">R$ {{ carona.preco }}</span>
+                                <span class="amount">R$ {{ carona.valor }}</span>
                                 <span class="per-seat">por assento</span>
                                 <a href="#" class="btn-primary-sm">Solicitar</a>
                             </div>
