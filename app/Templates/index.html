@@ -24,8 +24,20 @@
             <a href="{% url 'avaliacoes' %}" class="menu-item">Avaliações</a>
             <a href="{% url 'destinos' %}" class="menu-item">Destinos</a>
         </nav>
+
         <div class="sidebar-footer">
-            <a href="{% url 'logout' %}" class="menu-item">Sair</a>
+            <!-- Visível apenas para Administradores -->
+            {% if request.user.is_staff %}
+                <a href="{% url 'admin:index' %}" class="menu-item" target="_blank">Administração</a>
+            {% endif %}
+
+            <!-- Botão de Sair em Form -->
+            <form action="{% url 'logout' %}" method="post" class="logout-form">
+                {% csrf_token %}
+                <button type="submit" class="menu-item btn-logout">
+                    Sair
+                </button>
+            </form>
         </div>
     </aside>
 
@@ -56,7 +68,7 @@
                         <div class="carona-card">
                             <div class="driver-info">
                                 <div class="avatar-placeholder">
-                                    {{ carona.motorista.username|first|upper }}                               
+                                    {{ carona.motorista.username|first|upper }}
                                 </div>
                                 <div class="avaliacao">
                                     {% if carona.media_avaliacao %}
@@ -64,7 +76,6 @@
                                     {% else %}
                                         Sem avaliações
                                     {% endif %}
-
                                 </div>
                                 <div>
                                     <span class="driver-name">{{ carona.motorista.username }}</span>
@@ -73,7 +84,7 @@
                             </div>
 
                             <div class="route-info">
-                                <h3>{{ carona.origem }} ➔ IF Sul de Minas Muzambinho</h3>
+                                <h3>{{ carona.origem }} ➔ {{ carona.destino }}</h3>
                                 <p class="schedule">📅 {{ carona.dataHora|date:"d/m/Y - H:i" }}</p>
                                 <p class="spots">👥 {{ carona.vagas }} vagas restantes</p>
                             </div>

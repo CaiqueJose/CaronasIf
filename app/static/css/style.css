@@ -11,6 +11,7 @@ body {
     min-height: 100vh;
 }
 
+/* Header & Logo (Telas de Login / Cadastro) */
 .header-logo {
     text-align: center;
     margin-top: 40px;
@@ -27,6 +28,7 @@ body {
     font-size: 14px;
 }
 
+/* Card centralizado */
 .card {
     background: #fff;
     border: 1px solid #e2e8f0;
@@ -45,6 +47,7 @@ body {
     color: #333;
 }
 
+/* Campos de Formulário */
 .form-group {
     margin-bottom: 15px;
 }
@@ -104,6 +107,7 @@ body {
     margin: 0;
 }
 
+/* Botões Globais */
 .btn-primary {
     width: 100%;
     background-color: #2e7d32;
@@ -155,11 +159,14 @@ footer {
     font-size: 12px;
     text-align: center;
 }
+
+/* Layout Principal */
 .app-container {
     display: flex;
     min-height: 100vh;
 }
 
+/* Sidebar Esquerda */
 .sidebar {
     width: 240px;
     background-color: #ffffff;
@@ -182,6 +189,7 @@ footer {
     flex: 1;
 }
 
+/* Itens de Menu */
 .menu-item {
     display: flex;
     align-items: center;
@@ -191,6 +199,7 @@ footer {
     border-radius: 8px;
     font-size: 14px;
     font-weight: 500;
+    transition: background-color 0.2s, color 0.2s;
 }
 
 .menu-item:hover, 
@@ -199,11 +208,41 @@ footer {
     color: #2e7d32;
 }
 
+/* Rodapé da Sidebar (Administração / Sair) */
 .sidebar-footer {
     border-top: 1px solid #eee;
     padding-top: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
+.logout-form {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* Reset de estilo para o botão <button> de Logout parecer um link <a> */
+button.menu-item,
+.btn-logout {
+    width: 100%;
+    background: none;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    cursor: pointer;
+    text-align: left;
+    font-family: Arial, sans-serif;
+}
+
+button.menu-item:hover,
+.btn-logout:hover {
+    background-color: #f0fdf4;
+    color: #2e7d32;
+}
+
+/* Área de Conteúdo */
 .main-wrapper {
     flex: 1;
     display: flex;
@@ -263,6 +302,7 @@ footer {
     margin-bottom: 15px;
 }
 
+/* Lista e Cards de Carona */
 .caronas-list {
     display: flex;
     flex-direction: column;
@@ -361,6 +401,7 @@ footer {
     border: 1px dashed #ccc;
 }
 
+/* Sidebar Direita de Filtros */
 .filters-sidebar {
     width: 280px;
 }

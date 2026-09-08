@@ -7,6 +7,10 @@ from django.views.generic import TemplateView
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.db.models import Avg
+from django.contrib.auth.mixins import UserPassesTestMixin
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseForbidden
+from django.views.generic import CreateView
 import time
 
 
@@ -35,6 +39,53 @@ def verificar_sessao(request):
         status=401
     )
 
+def usuario_eh_motorista(user):
+    return user.groups.filter(name="Motorista").exists()
+
+
+def usuario_eh_passageiro(user):
+    return user.groups.filter(name="Passageiro").exists()
+
+
+def usuario_eh_administrador(user):
+    return user.groups.filter(name="Administrador").exists()
+
+
+class MotoristaRequiredMixin(UserPassesTestMixin):
+
+    def test_func(self):
+        return self.request.user.groups.filter(
+            name="Motorista"
+        ).exists()
+    
+class AdministradorRequiredMixin(UserPassesTestMixin):
+
+    def test_func(self):
+        return self.request.user.groups.filter(
+            name="Administrador"
+        ).exists()  
+    
+class CriarCaronaView(
+    LoginRequiredMixin,
+    MotoristaRequiredMixin,
+    CreateView
+):
+    model = Carona
+    template_name = "criar_carona.html"
+
+    fields = [
+        "origem",
+        "destino",
+        "dataHora",
+        "valor",
+        "vagas",
+    ]
+
+    login_url = "/login/"
+
+    def form_valid(self, form):
+        form.instance.motorista = self.request.user
+        return super().form_valid(form)
 
 class RegisterView(View):
     def get(self, request):
