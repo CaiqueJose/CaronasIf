@@ -10,8 +10,7 @@
 <body>
 
 <div class="app-container">
-
-    <!-- Sidebar Esquerda -->
+    
     <aside class="sidebar">
         <div class="sidebar-brand">
             <h2>Caronas IF</h2>
@@ -26,12 +25,10 @@
         </nav>
 
         <div class="sidebar-footer">
-            <!-- Visível apenas para Administradores -->
             {% if request.user.is_staff %}
                 <a href="{% url 'admin:index' %}" class="menu-item" target="_blank">Administração</a>
             {% endif %}
 
-            <!-- Botão de Sair em Form -->
             <form action="{% url 'logout' %}" method="post" class="logout-form">
                 {% csrf_token %}
                 <button type="submit" class="menu-item btn-logout">
@@ -41,20 +38,21 @@
         </div>
     </aside>
 
-    <!-- Conteúdo Principal -->
     <div class="main-wrapper">
         <header class="top-header">
             <div></div>
             <div class="user-profile">
-                <span>{{ request.user.username }}</span>
+                <a href="{% url 'perfil' %}" class="menu-item" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600;">
+                    👤 {{ request.user.username }}
+                </a>
             </div>
         </header>
 
         <main class="dashboard-content">
-            <!-- Feed Central de Caronas -->
+
             <section class="feed-section">
                 <div class="welcome-banner">
-                    <span class="greeting">Olá, {{ request.user.username }}! 👋</span>
+                    <h3 class="greeting">Olá, {{ request.user.username }}!</h3>
                     <h1>Encontre caronas para viajar com economia e segurança</h1>
                     <p class="subtitle">Veja as caronas disponíveis perto de Muzambinho e vá junto!</p>
                 </div>
@@ -78,8 +76,12 @@
                                     {% endif %}
                                 </div>
                                 <div>
-                                    <span class="driver-name">{{ carona.motorista.username }}</span>
-                                    <span class="badge-verified">Verificado</span>
+                                <h3 class="driver-name">
+                                    <a href="{% url 'perfil_motorista' carona.motorista.id %}">
+                                        {{ carona.motorista.username }}
+                                    </a>
+                                </h3>                                    
+                                <span class="badge-verified">Verificado</span>
                                 </div>
                             </div>
 
@@ -103,7 +105,6 @@
                 </div>
             </section>
 
-            <!-- Sidebar Direita de Filtros -->
             <aside class="filters-sidebar">
                 <div class="filters-card">
                     <div class="filters-header">

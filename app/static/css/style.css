@@ -11,7 +11,10 @@ body {
     min-height: 100vh;
 }
 
-/* Header & Logo (Telas de Login / Cadastro) */
+/* ========================================
+   LOGIN / CADASTRO
+   ======================================== */
+
 .header-logo {
     text-align: center;
     margin-top: 40px;
@@ -28,7 +31,6 @@ body {
     font-size: 14px;
 }
 
-/* Card centralizado */
 .card {
     background: #fff;
     border: 1px solid #e2e8f0;
@@ -47,7 +49,6 @@ body {
     color: #333;
 }
 
-/* Campos de Formulário */
 .form-group {
     margin-bottom: 15px;
 }
@@ -107,7 +108,6 @@ body {
     margin: 0;
 }
 
-/* Botões Globais */
 .btn-primary {
     width: 100%;
     background-color: #2e7d32;
@@ -160,16 +160,19 @@ footer {
     text-align: center;
 }
 
-/* Layout Principal */
+
+/* ========================================
+   ESTRUTURA PRINCIPAL / DASHBOARD
+   ======================================== */
+
 .app-container {
     display: flex;
     min-height: 100vh;
 }
 
-/* Sidebar Esquerda */
 .sidebar {
     width: 240px;
-    background-color: #ffffff;
+    background-color: #fff;
     border-right: 1px solid #e2e8f0;
     display: flex;
     flex-direction: column;
@@ -189,7 +192,6 @@ footer {
     flex: 1;
 }
 
-/* Itens de Menu */
 .menu-item {
     display: flex;
     align-items: center;
@@ -202,13 +204,12 @@ footer {
     transition: background-color 0.2s, color 0.2s;
 }
 
-.menu-item:hover, 
+.menu-item:hover,
 .menu-item.active {
     background-color: #f0fdf4;
     color: #2e7d32;
 }
 
-/* Rodapé da Sidebar (Administração / Sair) */
 .sidebar-footer {
     border-top: 1px solid #eee;
     padding-top: 15px;
@@ -223,7 +224,6 @@ footer {
     padding: 0;
 }
 
-/* Reset de estilo para o botão <button> de Logout parecer um link <a> */
 button.menu-item,
 .btn-logout {
     width: 100%;
@@ -242,7 +242,6 @@ button.menu-item:hover,
     color: #2e7d32;
 }
 
-/* Área de Conteúdo */
 .main-wrapper {
     flex: 1;
     display: flex;
@@ -263,6 +262,11 @@ button.menu-item:hover,
     font-weight: bold;
     color: #333;
 }
+
+
+/* ========================================
+   DASHBOARD
+   ======================================== */
 
 .dashboard-content {
     display: flex;
@@ -302,7 +306,6 @@ button.menu-item:hover,
     margin-bottom: 15px;
 }
 
-/* Lista e Cards de Carona */
 .caronas-list {
     display: flex;
     flex-direction: column;
@@ -323,6 +326,32 @@ button.menu-item:hover,
     display: flex;
     align-items: center;
     gap: 12px;
+}
+
+/* Nome do motorista */
+h3.driver-name {
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    line-height: 1.4 !important;
+}
+
+h3.driver-name a {
+    color: #222 !important;
+    text-decoration: none !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+h3.driver-name a:hover {
+    color: #1b5e20 !important;
+    text-decoration: none !important;
+    background-color: #f0fdf4;
 }
 
 .avatar-placeholder {
@@ -353,7 +382,7 @@ button.menu-item:hover,
     color: #222;
 }
 
-.schedule, 
+.schedule,
 .spots {
     font-size: 13px;
     color: #666;
@@ -401,7 +430,6 @@ button.menu-item:hover,
     border: 1px dashed #ccc;
 }
 
-/* Sidebar Direita de Filtros */
 .filters-sidebar {
     width: 280px;
 }
@@ -428,4 +456,485 @@ button.menu-item:hover,
 
 .clear-filters:hover {
     text-decoration: underline;
+}
+
+
+/* ========================================
+   CAMPOS DE PERFIL / MODAIS
+   ======================================== */
+
+.profile-field-group {
+    margin-bottom: 15px;
+}
+
+.profile-field-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: bold;
+    color: #444;
+    margin-bottom: 5px;
+}
+
+.profile-display-btn {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+    text-align: left;
+}
+
+.profile-display-btn:hover {
+    background-color: #f0fdf4;
+    border-color: #2e7d32;
+}
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 24px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eaecf0;
+    padding-bottom: 12px;
+}
+
+.modal-header h3 {
+    font-size: 18px;
+    color: #333;
+}
+
+.btn-close-modal {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #888;
+}
+
+.btn-close-modal:hover {
+    color: #333;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.btn-cancel-modal {
+    background-color: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-cancel-modal:hover {
+    background-color: #e5e7eb;
+}
+
+
+/* ========================================
+   PERFIL DO MOTORISTA
+   ======================================== */
+
+/*
+   IMPORTANTE:
+   O perfil do motorista NÃO usa .top-header.
+   O .top-header existente tem altura fixa de 60px.
+   Por isso, o HTML do perfil deve ficar:
+   
+   <header class="profile-header">...</header>
+   <main class="profile-page">...</main>
+*/
+
+.profile-header {
+    width: 100%;
+    max-width: 850px;
+    margin: 0 auto;
+    padding: 25px 30px 0;
+}
+
+.profile-header h1 {
+    color: #1b5e20;
+    font-size: 24px;
+    text-align: center;
+    margin: 0 0 20px 0;
+}
+
+.back-button {
+    display: inline-block;
+    color: #2e7d32;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.back-button:hover {
+    text-decoration: underline;
+}
+
+.profile-page {
+    width: 100%;
+    max-width: 850px;
+    margin: 0 auto;
+    padding: 0 30px 40px;
+}
+
+
+/* ========================================
+   CARD PRINCIPAL DO MOTORISTA
+   ======================================== */
+
+.profile-card,
+.rating-card,
+.reviews-card {
+    width: 100%;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.profile-card {
+    text-align: center;
+}
+
+.profile-avatar {
+    width: 70px;
+    height: 70px;
+    margin: 0 auto 15px auto;
+    border-radius: 50%;
+    background-color: #2e7d32;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.profile-username {
+    font-size: 20px;
+    color: #222;
+    margin-bottom: 5px;
+    word-break: break-word;
+}
+
+.profile-fullname {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 12px;
+    word-break: break-word;
+}
+
+
+/* ========================================
+   STATUS DO MOTORISTA
+   ======================================== */
+
+.verified-badge,
+.unverified-badge {
+    display: inline-block;
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.verified-badge {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.unverified-badge {
+    background-color: #f1f5f9;
+    color: #666;
+}
+
+
+/* ========================================
+   INFORMAÇÕES DO MOTORISTA
+   ======================================== */
+
+.profile-info {
+    margin-top: 20px;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 15px;
+}
+
+.profile-info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    padding: 10px 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 13px;
+}
+
+.profile-info-item:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-weight: bold;
+    color: #444;
+    flex-shrink: 0;
+}
+
+.info-value {
+    color: #666;
+    text-align: right;
+    word-break: break-word;
+}
+
+
+/* ========================================
+   AVALIAÇÃO
+   ======================================== */
+
+.rating-card h2,
+.reviews-card h2 {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.rating-main {
+    text-align: center;
+}
+
+.rating-number {
+    font-size: 32px;
+    font-weight: bold;
+    color: #2e7d32;
+}
+
+.rating-stars {
+    font-size: 18px;
+    margin: 5px 0;
+    letter-spacing: 2px;
+}
+
+.rating-main p {
+    font-size: 13px;
+    color: #777;
+}
+
+.no-rating {
+    text-align: center;
+    color: #777;
+    font-size: 13px;
+}
+
+.no-rating span {
+    display: block;
+    font-size: 25px;
+    margin-bottom: 8px;
+}
+
+
+/* ========================================
+   AVALIAÇÕES DOS PASSAGEIROS
+   ======================================== */
+
+.review-item {
+    padding: 15px 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.review-item:last-child {
+    border-bottom: none;
+}
+
+.review-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+}
+
+.review-rating {
+    font-size: 16px;
+    letter-spacing: 1px;
+}
+
+.review-header strong {
+    font-size: 13px;
+    color: #555;
+    white-space: nowrap;
+}
+
+.review-comment {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #666;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.empty-reviews {
+    text-align: center;
+    padding: 20px;
+    color: #777;
+    font-size: 13px;
+}
+
+.empty-reviews span {
+    display: block;
+    font-size: 25px;
+    margin-bottom: 8px;
+}
+
+
+/* ========================================
+   RESPONSIVIDADE
+   ======================================== */
+
+@media (max-width: 800px) {
+
+    .dashboard-content {
+        flex-direction: column;
+    }
+
+    .filters-sidebar {
+        width: 100%;
+    }
+
+    .carona-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .price-action {
+        width: 100%;
+        text-align: left;
+    }
+}
+
+
+@media (max-width: 600px) {
+
+    .sidebar {
+        width: 200px;
+        padding: 15px;
+    }
+
+    .top-header {
+        padding: 0 15px;
+    }
+
+    .dashboard-content {
+        padding: 15px;
+    }
+
+    .profile-header {
+        padding: 20px 15px 0;
+    }
+
+    .profile-header h1 {
+        font-size: 21px;
+    }
+
+    .profile-page {
+        padding: 0 15px 30px;
+    }
+
+    .profile-card,
+    .rating-card,
+    .reviews-card {
+        padding: 20px;
+    }
+
+    .profile-info-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .info-value {
+        text-align: left;
+        width: 100%;
+    }
+
+    .review-header {
+        align-items: flex-start;
+    }
+}
+
+
+@media (max-width: 450px) {
+
+    .sidebar {
+        width: 180px;
+    }
+
+    .sidebar-brand h2 {
+        font-size: 18px;
+    }
+
+    .menu-item {
+        padding: 10px;
+        font-size: 13px;
+    }
+
+    .profile-header h1 {
+        font-size: 19px;
+    }
+
+    .profile-card,
+    .rating-card,
+    .reviews-card {
+        padding: 16px;
+    }
+
+    .profile-avatar {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+    }
+
+    .profile-username {
+        font-size: 18px;
+    }
 }

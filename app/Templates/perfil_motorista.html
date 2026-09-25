@@ -1,0 +1,203 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Perfil de {{ motorista.username }} - Caronas IF</title>
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+
+<body>
+
+    <header class="profile-header">
+
+        <a href="{% url 'index' %}" class="back-button">
+            ← Voltar
+        </a>
+
+        <h1>Perfil do Motorista</h1>
+
+    </header>
+
+
+    <main class="profile-page">
+
+        <!-- Informações do motorista -->
+        <section class="profile-card">
+
+            <div class="profile-avatar">
+                {{ motorista.username|first|upper }}
+            </div>
+
+            <h2 class="profile-username">
+                {{ motorista.username }}
+            </h2>
+
+            <p class="profile-fullname">
+                {{ motorista.first_name }} {{ motorista.last_name }}
+            </p>
+
+            {% if motorista.perfil.is_verificado %}
+
+                <span class="verified-badge">
+                    ✓ Motorista verificado
+                </span>
+
+            {% else %}
+
+                <span class="unverified-badge">
+                    Motorista não verificado
+                </span>
+
+            {% endif %}
+
+
+            <div class="profile-info">
+
+                {% if motorista.perfil.telefone %}
+
+                    <div class="profile-info-item">
+
+                        <span class="info-label">
+                            Telefone
+                        </span>
+
+                        <span class="info-value">
+                            {{ motorista.perfil.telefone }}
+                        </span>
+
+                    </div>
+
+                {% endif %}
+
+
+                <div class="profile-info-item">
+
+                    <span class="info-label">
+                        E-mail
+                    </span>
+
+                    <span class="info-value">
+                        {{ motorista.email }}
+                    </span>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- Avaliação média -->
+        <section class="rating-card">
+
+            <h2>
+                Avaliação do motorista
+            </h2>
+
+            <div class="rating-main">
+
+                {% if media_avaliacao %}
+
+                    <div class="rating-number">
+                        {{ media_avaliacao|floatformat:1 }}
+                    </div>
+
+                    <div class="rating-stars">
+                        ⭐⭐⭐⭐⭐
+                    </div>
+
+                    <p>
+                        Média das avaliações
+                    </p>
+
+                {% else %}
+
+                    <div class="no-rating">
+
+                        <span>⭐</span>
+
+                        <p>
+                            Este motorista ainda não possui avaliações.
+                        </p>
+
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        </section>
+
+
+        <!-- Avaliações -->
+        <section class="reviews-card">
+
+            <h2>
+                Avaliações dos passageiros
+            </h2>
+
+
+            {% for avaliacao in avaliacoes %}
+
+                <article class="review-item">
+
+                    <div class="review-header">
+
+                        <div class="review-rating">
+
+                            {% for estrela in "12345" %}
+
+                                {% if forloop.counter <= avaliacao.nota %}
+                                    ⭐
+                                {% else %}
+                                    ☆
+                                {% endif %}
+
+                            {% endfor %}
+
+                        </div>
+
+
+                        <strong>
+                            {{ avaliacao.nota }}/5
+                        </strong>
+
+                    </div>
+
+
+                    {% if avaliacao.comentario %}
+
+                        <p class="review-comment">
+                            {{ avaliacao.comentario }}
+                        </p>
+
+                    {% endif %}
+
+                </article>
+
+
+            {% empty %}
+
+                <div class="empty-reviews">
+
+                    <span>⭐</span>
+
+                    <p>
+                        Nenhuma avaliação foi registrada para este motorista.
+                    </p>
+
+                </div>
+
+            {% endfor %}
+
+        </section>
+
+    </main>
+
+</body>
+</html>

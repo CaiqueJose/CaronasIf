@@ -1,17 +1,20 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.conf import settings
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
 
 class Destino(models.Model):
     nome = models.CharField(max_length=50, verbose_name="Nome do Destino")
-    
+
     def __str__(self):
         return str(self.nome)
-    
+
     class Meta:
         verbose_name = "Destino"
         verbose_name_plural = "Destinos"
 
-    
 
 class Carona(models.Model):
     motorista = models.ForeignKey(User, on_delete=models.CASCADE, related_name="caronas", verbose_name="Motorista", null=True, blank=True)
@@ -42,7 +45,7 @@ class Chat(models.Model):
 
 
 class Avaliacao(models.Model):
-    nota = models.IntegerField(verbose_name="Nota da Avaliação")
+    nota = models.DecimalField(verbose_name="Nota da Avaliação", max_digits=5, decimal_places=1)
     comentario = models.TextField(max_length=99, verbose_name="Comentário da Avaliação")
     motorista = models.ForeignKey(User, on_delete=models.CASCADE, related_name="avaliacoes", verbose_name="Motorista", null=True, blank=True)
 
@@ -87,3 +90,43 @@ class Cidade(models.Model):
     class Meta:
         verbose_name = "Cidade"
         verbose_name_plural = "Cidades"
+
+
+class PerfilUsuario(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='perfil',
+        verbose_name='Usuário',
+    )
+    is_verificado = models.BooleanField(
+        default=False,
+        verbose_name='Verificado',
+        help_text='Indica se a conta do usuário foi verificada no sistema.',
+    )
+    telefone = models.CharField(
+        max_length=20,
+        blank=True,
+        null=True,
+        verbose_name='Telefone',
+    )
+
+    class Meta:
+        verbose_name = 'Perfil de Usuário'
+        verbose_name_plural = 'Perfis de Usuários'
+
+    def __str__(self):
+        status = 'Verificado' if self.is_verificado else 'Não Verificado'
+        return f'{self.user.username} - {status}'
+
+
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def criar_perfil_usuario(sender, instance, created, **kwargs):
+    if created:
+        PerfilUsuario.objects.create(user=instance)
+
+
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def salvar_perfil_usuario(sender, instance, **kwargs):
+    if hasattr(instance, 'perfil'):
+        instance.perfil.save()

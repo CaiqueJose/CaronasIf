@@ -13,6 +13,7 @@ urlpatterns = [
     path("verificar-sessao/", verificar_sessao, name="verificar_sessao"),
     path("registrar-atividade/", registrar_atividade, name="registrar_atividade"),
     path('', IndexView.as_view(), name='index'),
+    path('perfil/', PerfilView.as_view(), name='perfil'),
     path('caronas/', CaronaView.as_view(), name='caronas'),
     path('chats/', ChatView.as_view(), name='chats'),
     path('avaliacoes/', AvaliacaoView.as_view(), name='avaliacoes'),
@@ -20,4 +21,7 @@ urlpatterns = [
     path('estados/', EstadoView.as_view(), name='estados'),
     path('cidades/', CidadeView.as_view(), name='cidades'),
     path('destinos/', DestinoView.as_view(), name='destinos'),
+    path("caronas/criar/", CriarCaronaView.as_view(), name="criar_carona"),
+    path("caronas/<int:pk>/editar/", EditarCaronaView.as_view(), name="editar_carona"),
+    path('perfil-motorista/<int:motorista_id>/', PerfilMotoristaView.as_view(), name='perfil_motorista' ),
 ]

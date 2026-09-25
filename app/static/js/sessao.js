@@ -4,7 +4,6 @@ function registrarAtividade() {
 
     const agora = Date.now();
 
-    // Evita mandar requisições centenas de vezes por segundo
     if (agora - ultimaAtividade < 30000) {
         return;
     }
@@ -61,4 +60,4 @@ setInterval(function () {
 
     });
 
-}, 50000);
+}, 500000);

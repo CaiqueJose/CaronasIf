@@ -1,0 +1,300 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Perfil - Caronas IF</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+<div class="app-container">
+    
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <h2>Caronas IF</h2>
+        </div>
+        <nav class="sidebar-menu">
+            <a href="{% url 'index' %}" class="menu-item">Início</a>
+            <a href="{% url 'caronas' %}" class="menu-item">Minhas Caronas</a>
+            <a href="#" class="menu-item">Buscar Caronas</a>
+            <a href="{% url 'chats' %}" class="menu-item">Mensagens</a>
+            <a href="{% url 'avaliacoes' %}" class="menu-item">Avaliações</a>
+            <a href="{% url 'destinos' %}" class="menu-item">Destinos</a>
+        </nav>
+
+        <div class="sidebar-footer">
+            {% if request.user.is_staff %}
+                <a href="{% url 'admin:index' %}" class="menu-item" target="_blank">Administração</a>
+            {% endif %}
+
+            <form action="{% url 'logout' %}" method="post" class="logout-form">
+                {% csrf_token %}
+                <button type="submit" class="menu-item btn-logout">
+                    Sair
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="top-header">
+            <div></div>
+            <div class="user-profile">
+                <a href="{% url 'perfil' %}" class="menu-item active" style="display: inline-flex; align-items: center; gap: 8px;">
+                    👤 {{ request.user.username }}
+                </a>
+            </div>
+        </header>
+
+        <main class="dashboard-content">
+            <section class="feed-section">
+                <div class="welcome-banner">
+                    <span class="greeting">Perfil do Usuário</span>
+                    <h1>{% if request.user.first_name %}{{ request.user.first_name }} {{ request.user.last_name }}{% else %}{{ request.user.username }}{% endif %}</h1>
+                    <p class="subtitle">Confira e gerencie suas informações de conta no Caronas IF</p>
+                </div>
+
+                <div class="carona-card" style="flex-direction: column; align-items: flex-start; gap: 20px; padding: 28px;">
+                    <div class="driver-info" style="gap: 16px;">
+                        <div class="avatar-placeholder" style="width: 64px; height: 64px; font-size: 28px;">
+                            {{ request.user.username|first|upper }}
+                        </div>
+                        <div>
+                            <span class="driver-name" style="font-size: 20px;">{{ request.user.username }}</span>
+                            {% if request.user.perfil.is_verificado %}
+                                <span class="badge-verified">Verificado</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div style="width: 100%; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid #eaecf0; padding-top: 20px;">
+
+                        <div class="profile-field-group">
+                            <label>Usuário</label>
+                            <button type="button" class="profile-display-btn" onclick="openModal('username')">
+                                <span>Usuário: {{ request.user.username }}</span>
+                                <span>✏️</span>
+                            </button>
+                        </div>
+
+                        {% if messages %}
+                            {% for message in messages %}
+                                {% if 'error' in message.tags or 'danger' in message.tags %}
+                                    <div class="alert alert-danger" style="padding: 12px 16px; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 8px; margin-top: 4px; margin-bottom: 8px;">
+                                        {{ message }}
+                                    </div>
+                                {% else %}
+                                    <div class="alert alert-success" style="padding: 12px 16px; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 8px; margin-top: 4px; margin-bottom: 8px;">
+                                        {{ message }}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+
+                        <div class="profile-field-group">
+                            <label>Nome</label>
+                            <button type="button" class="profile-display-btn" onclick="openModal('first_name')">
+                                <span>Nome: {{ form.first_name.value|default:request.user.first_name|default:'não informado' }}</span>
+                                <span>✏️</span>
+                            </button>
+                        </div>
+
+                        <div class="profile-field-group">
+                            <label>Sobrenome</label>
+                            <button type="button" class="profile-display-btn" onclick="openModal('last_name')">
+                                <span>Sobrenome: {{ form.last_name.value|default:request.user.last_name|default:'não informado' }}</span>
+                                <span>✏️</span>
+                            </button>
+                        </div>
+
+                        <div class="profile-field-group">
+                            <label>E-mail</label>
+                            <button type="button" class="profile-display-btn" onclick="openModal('email')">
+                                <span>E-mail: {{ form.email.value|default:request.user.email|default:'não informado' }}</span>
+                                <span>✏️</span>
+                            </button>
+                        </div>
+
+                        <div class="profile-field-group">
+                            <label>Telefone</label>
+                            <button type="button" class="profile-display-btn" onclick="openModal('telefone')">
+                                <span>Telefone: {{ form.telefone.value|default:request.user.perfil.telefone|default:'não informado' }}</span>
+                                <span>✏️</span>
+                            </button>
+                        </div>
+
+                        <div class="profile-field-group">
+                            <label>Senha</label>
+                            <button type="button" class="profile-display-btn" onclick="openModal('password')">
+                                <span>Senha: ••••••••</span>
+                                <span>🔒</span>
+                            </button>
+                        </div>
+
+                        <p class="schedule" style="margin-top: 4px;">📅 <strong>Membro desde:</strong> {{ request.user.date_joined|date:"d/m/Y" }}</p>
+
+                        <div style="display: flex; gap: 12px; margin-top: 12px;">
+                            <a href="{% url 'index' %}" class="btn-primary-sm" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; height: 42px;">Voltar ao Início</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+</div>
+
+<div id="modal-username" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Alterar Nome de Usuário</h3>
+            <button type="button" class="btn-close-modal" onclick="closeModal('username')">✕</button>
+        </div>
+        <form method="POST" action="{% url 'perfil' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_username">Novo Usuário</label>
+                <input type="text" name="username" id="id_username" value="{{ request.user.username }}" required>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel-modal" onclick="closeModal('username')">Cancelar</button>
+                <button type="submit" class="btn-primary" style="margin-top: 0; width: auto;">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-first_name" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Alterar Nome</h3>
+            <button type="button" class="btn-close-modal" onclick="closeModal('first_name')">✕</button>
+        </div>
+        <form method="POST" action="{% url 'perfil' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_first_name">Nome</label>
+                <input type="text" name="first_name" id="id_first_name" value="{{ form.first_name.value|default:request.user.first_name }}" placeholder="Seu nome">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel-modal" onclick="closeModal('first_name')">Cancelar</button>
+                <button type="submit" class="btn-primary" style="margin-top: 0; width: auto;">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-last_name" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Alterar Sobrenome</h3>
+            <button type="button" class="btn-close-modal" onclick="closeModal('last_name')">✕</button>
+        </div>
+        <form method="POST" action="{% url 'perfil' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_last_name">Sobrenome</label>
+                <input type="text" name="last_name" id="id_last_name" value="{{ form.last_name.value|default:request.user.last_name }}" placeholder="Seu sobrenome">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel-modal" onclick="closeModal('last_name')">Cancelar</button>
+                <button type="submit" class="btn-primary" style="margin-top: 0; width: auto;">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-email" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Alterar E-mail</h3>
+            <button type="button" class="btn-close-modal" onclick="closeModal('email')">✕</button>
+        </div>
+        <form method="POST" action="{% url 'perfil' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_email">E-mail</label>
+                <input type="email" name="email" id="id_email" value="{{ form.email.value|default:request.user.email }}" placeholder="seu.email@exemplo.com">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel-modal" onclick="closeModal('email')">Cancelar</button>
+                <button type="submit" class="btn-primary" style="margin-top: 0; width: auto;">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-telefone" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Alterar Telefone</h3>
+            <button type="button" class="btn-close-modal" onclick="closeModal('telefone')">✕</button>
+        </div>
+        <form method="POST" action="{% url 'perfil' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_telefone">Telefone</label>
+                <input type="text" name="telefone" id="id_telefone" value="{{ form.telefone.value|default:request.user.perfil.telefone }}" placeholder="(35) 99999-9999">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel-modal" onclick="closeModal('telefone')">Cancelar</button>
+                <button type="submit" class="btn-primary" style="margin-top: 0; width: auto;">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-password" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Alterar Senha</h3>
+            <button type="button" class="btn-close-modal" onclick="closeModal('password')">✕</button>
+        </div>
+        <form method="POST" action="{% url 'perfil' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_old_password">Senha Atual</label>
+                <input type="password" name="old_password" id="id_old_password" required placeholder="Digite sua senha atual">
+            </div>
+            <div class="form-group">
+                <label for="id_new_password1">Nova Senha</label>
+                <input type="password" name="new_password1" id="id_new_password1" required placeholder="Digite a nova senha">
+            </div>
+            <div class="form-group">
+                <label for="id_new_password2">Confirmar Nova Senha</label>
+                <input type="password" name="new_password2" id="id_new_password2" required placeholder="Repita a nova senha">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel-modal" onclick="closeModal('password')">Cancelar</button>
+                <button type="submit" class="btn-primary" style="margin-top: 0; width: auto;">Alterar Senha</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openModal(field) {
+        const modal = document.getElementById(`modal-${field}`);
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    }
+
+    function closeModal(field) {
+        const modal = document.getElementById(`modal-${field}`);
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal-overlay')) {
+            event.target.style.display = 'none';
+        }
+    }
+</script>
+
+</body>
+</html>

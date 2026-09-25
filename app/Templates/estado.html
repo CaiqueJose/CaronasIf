@@ -1,0 +1,31 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Destinos - Caronas IF</title>
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+
+<body>
+
+    <h1>Destinos disponíveis</h1>
+
+    {% for destino in destinos %}
+
+        <div>
+            {{ destino.nome }}
+        </div>
+
+    {% empty %}
+
+        <p>Nenhum destino cadastrado.</p>
+
+    {% endfor %}
+
+</body>
+</html>

@@ -80,6 +80,12 @@ class AvaliacaoAdmin(admin.ModelAdmin):
         'nota',
         'motorista',
     )
+    
+@admin.register(PerfilUsuario)
+class PerfilUsuarioAdmin(admin.ModelAdmin):
+    list_display = ("user", "is_verificado", "telefone")
+    list_filter = ("is_verificado",)
+    search_fields = ("user__username", "user__email")
 
 
 admin.site.register(Carona, CaronaAdmin)
