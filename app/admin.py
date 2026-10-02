@@ -1,5 +1,14 @@
 from django.contrib import admin
-from .models import *
+from .models import (
+    Pais,
+    Estado,
+    Cidade,
+    Carona,
+    Conversa,
+    Mensagem,
+    Avaliacao,
+    PerfilUsuario,
+)
 
 
 class EstadoInline(admin.TabularInline):
@@ -31,37 +40,38 @@ class CidadeAdmin(admin.ModelAdmin):
     list_filter = ('estado',)
 
 
-class DestinoAdmin(admin.ModelAdmin):
-    list_display = ('nome',)
-    search_fields = ('nome',)
-
-
 class CaronaAdmin(admin.ModelAdmin):
     list_display = (
         'motorista',
         'origem',
         'destino',
-        'dataHora',
+        'data_hora',
         'valor',
         'vagas',
     )
 
     search_fields = (
-        'origem',
+        'origem__nome',
         'motorista__username',
         'destino__nome',
     )
 
     list_filter = (
         'destino',
-        'dataHora',
+        'data_hora',
     )
 
 
-class ChatAdmin(admin.ModelAdmin):
-    list_display = ('mensagem', 'criadoEm')
-    search_fields = ('mensagem',)
-    list_filter = ('criadoEm',)
+class ConversaAdmin(admin.ModelAdmin):
+    list_display = ('id', 'carona', 'criado_em')
+    search_fields = ('carona__origem__nome', 'carona__destino__nome')
+    filter_horizontal = ('participantes',)
+
+
+class MensagemAdmin(admin.ModelAdmin):
+    list_display = ('conversa', 'remetente', 'texto', 'enviado_em')
+    search_fields = ('texto', 'remetente__username')
+    list_filter = ('enviado_em',)
 
 
 class AvaliacaoAdmin(admin.ModelAdmin):
@@ -80,7 +90,8 @@ class AvaliacaoAdmin(admin.ModelAdmin):
         'nota',
         'motorista',
     )
-    
+
+
 @admin.register(PerfilUsuario)
 class PerfilUsuarioAdmin(admin.ModelAdmin):
     list_display = ("user", "is_verificado", "telefone")
@@ -89,9 +100,9 @@ class PerfilUsuarioAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Carona, CaronaAdmin)
-admin.site.register(Chat, ChatAdmin)
+admin.site.register(Conversa, ConversaAdmin)
+admin.site.register(Mensagem, MensagemAdmin)
 admin.site.register(Avaliacao, AvaliacaoAdmin)
-admin.site.register(Destino, DestinoAdmin)
 admin.site.register(Pais, PaisAdmin)
 admin.site.register(Estado, EstadoAdmin)
 admin.site.register(Cidade, CidadeAdmin)

@@ -1,31 +1,663 @@
 {% load static %}
 
 <!DOCTYPE html>
+
 <html lang="pt-br">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Destinos - Caronas IF</title>
 
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Chat - Caronas IF</title>
+
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+
 </head>
 
 <body>
 
-    <h1>Destinos disponíveis</h1>
+<div class="app-container">
 
-    {% for destino in destinos %}
+
+<aside class="sidebar">
+
+    <div class="sidebar-brand">
+        <h2>Caronas IF</h2>
+    </div>
+
+    <nav class="sidebar-menu">
+
+        <a href="{% url 'index' %}" class="menu-item">
+            Início
+        </a>
+
+        <a href="{% url 'caronas' %}" class="menu-item">
+            Caronas
+        </a>
+
+        <a href="{% url 'chats' %}" class="menu-item active">
+            Mensagens
+        </a>
+
+    </nav>
+
+    <div class="sidebar-footer">
+
+        <a href="{% url 'perfil' %}" class="menu-item">
+            Perfil
+        </a>
+
+        <form method="post" action="{% url 'logout' %}" class="logout-form">
+
+            {% csrf_token %}
+
+            <button type="submit" class="menu-item btn-logout">
+                Sair
+            </button>
+
+        </form>
+
+    </div>
+
+</aside>
+
+
+<div class="main-wrapper">
+
+    <header class="top-header">
 
         <div>
-            {{ destino.nome }}
+            <strong>Mensagens</strong>
         </div>
 
-    {% empty %}
+        <div class="user-profile">
 
-        <p>Nenhum destino cadastrado.</p>
+            <a href="{% url 'perfil' %}"
+               class="menu-item"
+               style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600;">
+                👤 {{ request.user.username }}
+            </a>
+        
+        </div>
 
-    {% endfor %}
+    </header>
+
+
+    <main class="chat-content">
+
+        <section class="chat-list-card">
+
+            <div class="chat-list-header">
+                <h2>Conversas</h2>
+            </div>
+
+            <div class="chat-list">
+
+                {% for item in conversas %}
+
+                    <a href="{% url 'abrir_chat' item.id %}"
+                       class="chat-item {% if conversa and conversa.id == item.id %}active{% endif %}">
+
+                        <div class="chat-item-top">
+
+                            <div class="chat-avatar">
+
+                                {% for participante in item.participantes.all %}
+
+                                    {% if participante.id != request.user.id %}
+                                        {{ participante.username|first|upper }}
+                                    {% endif %}
+
+                                {% empty %}
+
+                                    ?
+
+                                {% endfor %}
+
+                            </div>
+
+
+                            <div class="chat-item-info">
+
+                                <div class="chat-item-name">
+
+                                    {% for participante in item.participantes.all %}
+
+                                        {% if participante.id != request.user.id %}
+                                            {{ participante.username }}
+                                        {% endif %}
+
+                                    {% empty %}
+
+                                        Conversa
+
+                                    {% endfor %}
+
+                                </div>
+
+
+                                {% if item.carona %}
+
+                                    <div class="chat-item-route">
+                                        {{ item.carona.origem }}
+                                        →
+                                        {{ item.carona.destino }}
+                                    </div>
+
+                                {% else %}
+
+                                    <div class="chat-item-route">
+                                        Conversa
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+                    </a>
+
+                {% empty %}
+
+                    <div class="chat-empty">
+
+                        <div style="font-size: 35px; margin-bottom: 10px;">
+                            <img src="..\static\images\balaomensagem.png">
+                        </div>
+
+                        <p>
+                            Você ainda não possui conversas.
+                        </p>
+
+                        <p>
+                            Quando iniciar uma conversa sobre uma carona,
+                            ela aparecerá aqui.
+                        </p>
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        </section>
+
+
+        <!-- CONVERSA -->
+
+        {% if conversa %}
+
+            <section class="chat-window">
+
+                <div class="chat-window-header">
+
+                    <div class="chat-avatar">
+
+                        {% for participante in conversa.participantes.all %}
+
+                            {% if participante.id != request.user.id %}
+                                {{ participante.username|first|upper }}
+                            {% endif %}
+
+                        {% empty %}
+
+                            ?
+
+                        {% endfor %}
+
+                    </div>
+
+
+                    <div>
+
+                        <h2>
+
+                            {% for participante in conversa.participantes.all %}
+
+                                {% if participante.id != request.user.id %}
+                                    {{ participante.username }}
+                                {% endif %}
+
+                            {% empty %}
+
+                                Conversa
+
+                            {% endfor %}
+
+                        </h2>
+
+
+                        {% if conversa.carona %}
+
+                            <p>
+                                {{ conversa.carona.origem }}
+                                →
+                                {{ conversa.carona.destino }}
+                            </p>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                <div class="chat-messages" id="chatMessages">
+
+                    {% for mensagem in mensagens %}
+
+                        <div
+                            class="message-row {% if mensagem.remetente.id == request.user.id %}mine{% else %}other{% endif %}"
+                            data-message-id="{{ mensagem.id }}"
+                        >
+
+                            <div class="message-bubble">
+
+                                {% if mensagem.remetente.id != request.user.id %}
+
+                                    <div class="message-sender">
+                                        {{ mensagem.remetente.username }}
+                                    </div>
+
+                                {% endif %}
+
+
+                                <div>
+                                    {{ mensagem.texto|linebreaksbr }}
+                                </div>
+
+
+                                <span class="message-time">
+                                    {{ mensagem.enviado_em|date:"d/m H:i" }}
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    {% empty %}
+
+                        <div id="emptyMessages"
+                             style="text-align:center; color:#777; font-size:13px; margin:auto;">
+
+                            Nenhuma mensagem ainda.<br>
+                            Envie a primeira mensagem!
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+
+                <form
+                    class="chat-form"
+                    id="chatForm"
+                    method="post"
+                    action="{% url 'enviar_mensagem' conversa.id %}"
+                >
+
+                    {% csrf_token %}
+
+                    <input
+                        type="text"
+                        id="messageInput"
+                        class="chat-input"
+                        name="texto"
+                        placeholder="Digite uma mensagem..."
+                        autocomplete="off"
+                        maxlength="1000"
+                        required
+                    >
+
+                    <button
+                        type="submit"
+                        class="chat-send-button"
+                        id="sendButton"
+                    >
+                        Enviar
+                    </button>
+
+                </form>
+
+            </section>
+
+        {% else %}
+
+            <section class="chat-window">
+
+                <div class="chat-placeholder">
+
+                    <div class="chat-placeholder-content">
+
+                        <div class="chat-placeholder-icon">
+                            <img src="..\static\images\balaomensagem.png">
+                        </div>
+
+                        <h2>
+                            Suas mensagens
+                        </h2>
+
+                        <p>
+                            Selecione uma conversa ao lado para começar
+                            a conversar com outro usuário.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        {% endif %}
+
+    </main>
+
+</div>
+```
+
+</div>
+
+{% if conversa %}
+
+<script>
+
+    const chatForm = document.getElementById("chatForm");
+    const messageInput = document.getElementById("messageInput");
+    const messagesContainer = document.getElementById("chatMessages");
+    const sendButton = document.getElementById("sendButton");
+
+    const usuarioAtualId = "{{ request.user.id }}";
+
+
+    function rolarParaBaixo() {
+
+        messagesContainer.scrollTop =
+            messagesContainer.scrollHeight;
+
+    }
+
+
+    function criarMensagem(mensagem) {
+
+        const row = document.createElement("div");
+
+        row.className =
+            "message-row " +
+            (
+                String(mensagem.remetente_id) ===
+                String(usuarioAtualId)
+                    ? "mine"
+                    : "other"
+            );
+
+        row.dataset.messageId = mensagem.id;
+
+
+        const bubble =
+            document.createElement("div");
+
+        bubble.className = "message-bubble";
+
+
+        if (
+            String(mensagem.remetente_id) !==
+            String(usuarioAtualId)
+        ) {
+
+            const sender =
+                document.createElement("div");
+
+            sender.className = "message-sender";
+
+            sender.textContent =
+                mensagem.remetente;
+
+            bubble.appendChild(sender);
+
+        }
+
+
+        const text =
+            document.createElement("div");
+
+        text.textContent =
+            mensagem.texto;
+
+        bubble.appendChild(text);
+
+
+        const time =
+            document.createElement("span");
+
+        time.className = "message-time";
+
+        time.textContent =
+            mensagem.enviado_em;
+
+        bubble.appendChild(time);
+
+
+        row.appendChild(bubble);
+
+        return row;
+
+    }
+
+
+    function atualizarMensagens() {
+
+        fetch(
+            "{% url 'buscar_mensagens' conversa.id %}"
+        )
+
+        .then(response => {
+
+            if (!response.ok) {
+                throw new Error(
+                    "Erro ao buscar mensagens."
+                );
+            }
+
+            return response.json();
+
+        })
+
+        .then(data => {
+
+            const mensagensExistentes =
+                new Set(
+                    Array.from(
+                        messagesContainer.querySelectorAll(
+                            "[data-message-id]"
+                        )
+                    ).map(
+                        element =>
+                            element.dataset.messageId
+                    )
+                );
+
+
+            const emptyMessage =
+                document.getElementById(
+                    "emptyMessages"
+                );
+
+
+            if (
+                data.mensagens.length > 0 &&
+                emptyMessage
+            ) {
+                emptyMessage.remove();
+            }
+
+
+            data.mensagens.forEach(mensagem => {
+
+                if (
+                    !mensagensExistentes.has(
+                        String(mensagem.id)
+                    )
+                ) {
+
+                    messagesContainer.appendChild(
+                        criarMensagem(mensagem)
+                    );
+
+                }
+
+            });
+
+
+            rolarParaBaixo();
+
+        })
+
+        .catch(error => {
+
+            console.error(error);
+
+        });
+
+    }
+
+
+    chatForm.addEventListener(
+        "submit",
+        function(event) {
+
+            event.preventDefault();
+
+
+            const texto =
+                messageInput.value.trim();
+
+
+            if (!texto) {
+                return;
+            }
+
+
+            sendButton.disabled = true;
+
+
+            const formData =
+                new FormData();
+
+            formData.append(
+                "texto",
+                texto
+            );
+
+
+            const csrfToken =
+                document.querySelector(
+                    "[name=csrfmiddlewaretoken]"
+                ).value;
+
+
+            fetch(
+                "{% url 'enviar_mensagem' conversa.id %}",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "X-CSRFToken": csrfToken
+                    },
+
+                    body: formData
+                }
+            )
+
+            .then(response => {
+
+                if (!response.ok) {
+                    throw new Error(
+                        "Erro ao enviar mensagem."
+                    );
+                }
+
+                return response.json();
+
+            })
+
+            .then(data => {
+
+                const emptyMessage =
+                    document.getElementById(
+                        "emptyMessages"
+                    );
+
+
+                if (emptyMessage) {
+                    emptyMessage.remove();
+                }
+
+
+                messagesContainer.appendChild(
+                    criarMensagem(data)
+                );
+
+
+                messageInput.value = "";
+
+                messageInput.focus();
+
+                rolarParaBaixo();
+
+            })
+
+            .catch(error => {
+
+                console.error(error);
+
+                alert(
+                    "Não foi possível enviar a mensagem."
+                );
+
+            })
+
+            .finally(() => {
+
+                sendButton.disabled = false;
+
+            });
+
+        }
+    );
+
+
+    messageInput.addEventListener(
+        "keydown",
+        function(event) {
+
+            if (event.key === "Enter") {
+
+                event.preventDefault();
+
+                chatForm.requestSubmit();
+
+            }
+
+        }
+    );
+
+
+    rolarParaBaixo();
+
+
+    setInterval(
+        atualizarMensagens,
+        3000
+    );
+
+</script>
+
+{% endif %}
 
 </body>
 </html>

@@ -1,5 +1,7 @@
 {% load static %}
+
 <!DOCTYPE html>
+
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
@@ -10,134 +12,355 @@
 <body>
 
 <div class="app-container">
-    
-    <aside class="sidebar">
-        <div class="sidebar-brand">
-            <h2>Caronas IF</h2>
+
+```
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <h2>Caronas IF</h2>
+    </div>
+
+    <nav class="sidebar-menu">
+        <a href="{% url 'index' %}" class="menu-item active">Início</a>
+        <a href="{% url 'caronas' %}" class="menu-item">Minhas Caronas</a>
+        <a href="{% url 'chats' %}" class="menu-item">Mensagens</a>
+    </nav>
+
+    <div class="sidebar-footer">
+
+        {% if request.user.is_staff %}
+            <a href="{% url 'admin:index' %}" class="menu-item" target="_blank">
+                Administração
+            </a>
+        {% endif %}
+
+        <form action="{% url 'logout' %}" method="post" class="logout-form">
+
+            {% csrf_token %}
+
+            <button type="submit" class="menu-item btn-logout">
+                Sair
+            </button>
+
+        </form>
+
+    </div>
+</aside>
+
+
+<div class="main-wrapper">
+
+    <header class="top-header">
+
+        <div></div>
+
+        <div class="user-profile">
+
+            <!-- BALÃO DE MENSAGENS -->
+            <a href="{% url 'chats' %}"
+               class="navbar-messages"
+               title="Mensagens"
+               aria-label="Mensagens">
+
+                <svg class="message-icon"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true">
+
+                    <path
+                        d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5
+                           c-1.1 0-2.15-.24-3.1-.67
+                           L4 20l1.67-4.02
+                           A7.47 7.47 0 0 1 5 11.5
+                           a7.5 7.5 0 1 1 15 0Z"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round">
+                    </path>
+
+                </svg>
+
+                {% if conversas_com_mensagens_novas > 0 %}
+
+                    <span class="message-notification">
+                        {{ conversas_com_mensagens_novas }}
+                    </span>
+
+                {% endif %}
+
+            </a>
+
+
+            <!-- PERFIL -->
+            <a href="{% url 'perfil' %}"
+               class="menu-item"
+               style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600;">
+
+                👤 {{ request.user.username }}
+
+            </a>
+
         </div>
-        <nav class="sidebar-menu">
-            <a href="{% url 'index' %}" class="menu-item active">Início</a>
-            <a href="{% url 'caronas' %}" class="menu-item">Minhas Caronas</a>
-            <a href="#" class="menu-item">Buscar Caronas</a>
-            <a href="{% url 'chats' %}" class="menu-item">Mensagens</a>
-            <a href="{% url 'avaliacoes' %}" class="menu-item">Avaliações</a>
-            <a href="{% url 'destinos' %}" class="menu-item">Destinos</a>
-        </nav>
 
-        <div class="sidebar-footer">
-            {% if request.user.is_staff %}
-                <a href="{% url 'admin:index' %}" class="menu-item" target="_blank">Administração</a>
-            {% endif %}
+    </header>
 
-            <form action="{% url 'logout' %}" method="post" class="logout-form">
-                {% csrf_token %}
-                <button type="submit" class="menu-item btn-logout">
-                    Sair
-                </button>
-            </form>
-        </div>
-    </aside>
 
-    <div class="main-wrapper">
-        <header class="top-header">
-            <div></div>
-            <div class="user-profile">
-                <a href="{% url 'perfil' %}" class="menu-item" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600;">
-                    👤 {{ request.user.username }}
-                </a>
+    <main class="dashboard-content">
+
+        <section class="feed-section">
+
+            <div class="welcome-banner">
+
+                <h3 class="greeting">
+                    Olá, {{ request.user.username }}!
+                </h3>
+
+                <h1>
+                    Encontre caronas para viajar com economia e segurança
+                </h1>
+
+                <p class="subtitle">
+                    Veja as caronas disponíveis perto de Muzambinho e vá junto!
+                </p>
+
             </div>
-        </header>
 
-        <main class="dashboard-content">
 
-            <section class="feed-section">
-                <div class="welcome-banner">
-                    <h3 class="greeting">Olá, {{ request.user.username }}!</h3>
-                    <h1>Encontre caronas para viajar com economia e segurança</h1>
-                    <p class="subtitle">Veja as caronas disponíveis perto de Muzambinho e vá junto!</p>
-                </div>
+            <div class="section-header">
 
-                <div class="section-header">
-                    <h2>Caronas disponíveis</h2>
-                </div>
+                <h2>
+                    Caronas disponíveis
+                </h2>
 
-                <div class="caronas-list">
-                    {% for carona in caronas %}
-                        <div class="carona-card">
-                            <div class="driver-info">
-                                <div class="avatar-placeholder">
-                                    {{ carona.motorista.username|first|upper }}
-                                </div>
-                                <div class="avaliacao">
-                                    {% if carona.media_avaliacao %}
-                                        ⭐ {{ carona.media_avaliacao|floatformat:1 }}
-                                    {% else %}
-                                        Sem avaliações
-                                    {% endif %}
-                                </div>
-                                <div>
+            </div>
+
+
+            <div class="caronas-list">
+
+                {% for carona in caronas %}
+
+                    <div class="carona-card">
+
+                        <div class="driver-info">
+
+                            <div class="avatar-placeholder">
+                                {{ carona.motorista.username|first|upper }}
+                            </div>
+
+                            <div class="avaliacao">
+
+                                {% if carona.media_avaliacao %}
+
+                                    ⭐ {{ carona.media_avaliacao|floatformat:1 }}
+
+                                {% else %}
+
+                                    Sem avaliações
+
+                                {% endif %}
+
+                            </div>
+
+
+                            <div>
+
                                 <h3 class="driver-name">
+
                                     <a href="{% url 'perfil_motorista' carona.motorista.id %}">
                                         {{ carona.motorista.username }}
                                     </a>
-                                </h3>                                    
-                                <span class="badge-verified">Verificado</span>
-                                </div>
+
+                                </h3>
+
+                                <span class="badge-verified">
+                                    Verificado
+                                </span>
+
                             </div>
 
-                            <div class="route-info">
-                                <h3>{{ carona.origem }} ➔ {{ carona.destino }}</h3>
-                                <p class="schedule">📅 {{ carona.dataHora|date:"d/m/Y - H:i" }}</p>
-                                <p class="spots">👥 {{ carona.vagas }} vagas restantes</p>
-                            </div>
-
-                            <div class="price-action">
-                                <span class="amount">R$ {{ carona.valor }}</span>
-                                <span class="per-seat">por assento</span>
-                                <a href="#" class="btn-primary-sm">Solicitar</a>
-                            </div>
                         </div>
-                    {% empty %}
-                        <div class="empty-state">
-                            <p>Nenhuma carona disponível no momento.</p>
-                        </div>
-                    {% endfor %}
-                </div>
-            </section>
 
-            <aside class="filters-sidebar">
-                <div class="filters-card">
-                    <div class="filters-header">
-                        <h3>Filtros</h3>
-                        <a href="{% url 'index' %}" class="clear-filters">Limpar</a>
+
+                        <div class="route-info">
+
+                            <h3>
+                                {{ carona.origem }} ➔ {{ carona.destino }}
+                            </h3>
+
+                            <p class="schedule">
+                                📅 {{ carona.data_hora|date:"d/m/Y - H:i" }}
+                            </p>
+
+                            <p class="spots">
+                                👥 {{ carona.vagas }} vagas restantes
+                            </p>
+
+                        </div>
+
+
+                        <div class="price-action">
+
+                            <span class="amount">
+                                R$ {{ carona.valor }}
+                            </span>
+
+                            <span class="per-seat">
+                                por assento
+                            </span>
+
+                            <a href="#" class="btn-primary-sm">
+                                Solicitar
+                            </a>
+
+                        </div>
+
                     </div>
-                    <form method="GET" action="{% url 'index' %}">
-                        <div class="form-group">
-                            <label for="destino">Destino</label>
-                            <input type="text" id="destino" name="destino" placeholder="Para onde você vai?">
-                        </div>
 
-                        <div class="form-group">
-                            <label for="data">Data</label>
-                            <input type="date" id="data" name="data">
-                        </div>
 
-                        <div class="form-group">
-                            <label for="horario">Horário</label>
-                            <select id="horario" name="horario">
-                                <option value="">Qualquer horário</option>
-                                <option value="manha">Manhã (06:00 - 12:00)</option>
-                                <option value="tarde">Tarde (12:00 - 18:00)</option>
-                                <option value="noite">Noite (18:00 - 00:00)</option>
-                            </select>
-                        </div>
+                {% empty %}
 
-                        <button type="submit" class="btn-primary">Filtrar</button>
-                    </form>
+                    <div class="empty-state">
+
+                        <p>
+                            Nenhuma carona disponível no momento.
+                        </p>
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        </section>
+
+
+        <aside class="filters-sidebar">
+
+            <div class="filters-card">
+
+                <div class="filters-header">
+
+                    <h3>
+                        Filtros
+                    </h3>
+
+                    <a href="{% url 'index' %}" class="clear-filters">
+                        Limpar
+                    </a>
+
                 </div>
-            </aside>
-        </main>
-    </div>
+
+
+                <form method="GET" action="{% url 'index' %}">
+
+                    <!-- DESTINO -->
+                    <div class="form-group">
+
+                        <label for="destino">
+                            Destino
+                        </label>
+
+                        <select id="destino" name="destino">
+
+                            <option value="">
+                                Todos os destinos
+                            </option>
+
+                            <option value="Portaria">
+                                Portaria
+                            </option>
+
+                            <option value="Prédio Principal">
+                                Prédio Principal
+                            </option>
+
+                            <option value="Biblioteca">
+                                Biblioteca
+                            </option>
+
+                            <option value="Restaurante">
+                                Restaurante
+                            </option>
+
+                            <option value="Ginásio">
+                                Ginásio
+                            </option>
+
+                            <option value="Laboratórios">
+                                Laboratórios
+                            </option>
+
+                            <option value="Fazenda">
+                                Fazenda
+                            </option>
+
+                            <option value="Centro de Vivência">
+                                Centro de Vivência
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- DATA -->
+                    <div class="form-group">
+
+                        <label for="data">
+                            Data
+                        </label>
+
+                        <input type="date"
+                               id="data"
+                               name="data">
+
+                    </div>
+
+
+                    <!-- HORÁRIO -->
+                    <div class="form-group">
+
+                        <label for="horario">
+                            Horário
+                        </label>
+
+                        <select id="horario" name="horario">
+
+                            <option value="">
+                                Qualquer horário
+                            </option>
+
+                            <option value="manha">
+                                Manhã (06:00 - 12:00)
+                            </option>
+
+                            <option value="tarde">
+                                Tarde (12:00 - 18:00)
+                            </option>
+
+                            <option value="noite">
+                                Noite (18:00 - 00:00)
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <button type="submit" class="btn-primary">
+                        Filtrar
+                    </button>
+
+                </form>
+
+            </div>
+
+        </aside>
+
+    </main>
+
+</div>
+```
 
 </div>
 
