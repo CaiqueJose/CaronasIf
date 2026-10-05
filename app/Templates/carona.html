@@ -5,27 +5,279 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Destinos - Caronas IF</title>
-
+    <title>Minhas Caronas - Caronas IF</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 
 <body>
 
-    <h1>Destinos disponíveis</h1>
+<div class="app-container">
 
-    {% for destino in destinos %}
+    <aside class="sidebar">
 
-        <div>
-            {{ destino.nome }}
+        <div class="sidebar-brand">
+            <h2>Caronas IF</h2>
         </div>
 
-    {% empty %}
+        <nav class="sidebar-menu">
 
-        <p>Nenhum destino cadastrado.</p>
+            <a href="{% url 'index' %}" class="menu-item">
+                Início
+            </a>
 
-    {% endfor %}
+            <a href="{% url 'minhas_caronas' %}" class="menu-item active">
+                Minhas Caronas
+            </a>
+
+            <a href="{% url 'chats' %}" class="menu-item">
+                Mensagens
+            </a>
+
+        </nav>
+
+        <div class="sidebar-footer">
+
+            {% if request.user.is_staff %}
+
+                <a href="{% url 'admin:index' %}"
+                   class="menu-item"
+                   target="_blank">
+
+                    Administração
+
+                </a>
+
+            {% endif %}
+
+            <form action="{% url 'logout' %}"
+                  method="post"
+                  class="logout-form">
+
+                {% csrf_token %}
+
+                <button type="submit"
+                        class="menu-item btn-logout">
+
+                    Sair
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </aside>
+
+
+    <div class="main-wrapper">
+
+        <header class="top-header">
+
+            <div></div>
+
+            <div class="user-profile">
+
+                <a href="{% url 'chats' %}"
+                   class="navbar-messages"
+                   title="Mensagens"
+                   aria-label="Mensagens">
+
+                    <svg class="message-icon"
+                         viewBox="0 0 24 24"
+                         aria-hidden="true">
+
+                        <path
+                            d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5
+                               c-1.1 0-2.15-.24-3.1-.67
+                               L4 20l1.67-4.02
+                               A7.47 7.47 0 0 1 5 11.5
+                               a7.5 7.5 0 1 1 15 0Z"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                            stroke-linejoin="round">
+                        </path>
+
+                    </svg>
+
+                    {% if conversas_com_mensagens_novas > 0 %}
+
+                        <span class="message-notification">
+                            {{ conversas_com_mensagens_novas }}
+                        </span>
+
+                    {% endif %}
+
+                </a>
+
+
+                <a href="{% url 'perfil' %}"
+                   class="menu-item"
+                   style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600;">
+
+                    👤 {{ request.user.username }}
+
+                </a>
+
+            </div>
+
+        </header>
+
+
+        <main class="dashboard-content">
+
+            <section class="feed-section">
+
+                <div class="welcome-banner">
+
+                    <h3 class="greeting">
+                        Minhas Caronas
+                    </h3>
+
+                    <h1>
+                        Gerencie as caronas que você oferece
+                    </h1>
+
+                    <p class="subtitle">
+                        Consulte, edite e crie novas caronas pelo sistema.
+                    </p>
+
+                </div>
+
+
+                <div class="section-header">
+
+                    <h2>
+                        Suas caronas oferecidas
+                    </h2>
+
+                </div>
+
+
+                {% if user.perfil.is_verificado %}
+
+                    <div style="margin-bottom: 20px;">
+
+                        <a href="{% url 'criar_carona' %}"
+                           class="btn-primary">
+
+                            + Criar uma carona
+
+                        </a>
+
+                    </div>
+
+                {% else %}
+
+                    <div class="welcome-banner"
+                         style="background-color: #fff8e1;">
+
+                        <h3>
+                            Verificação de motorista pendente
+                        </h3>
+
+                        <p>
+                            Para oferecer caronas, é necessário verificar sua CNH.
+                        </p>
+
+                        <a href="{% url 'verificacao_cnh' %}"
+                           class="btn-primary">
+
+                            Verificar CNH
+
+                        </a>
+
+                    </div>
+
+                {% endif %}
+
+
+                <div class="caronas-list">
+
+                    {% for carona in caronas %}
+
+                        <div class="carona-card">
+
+                            <div class="route-info">
+
+                                <h3>
+                                    {{ carona.origem }} ➔ {{ carona.destino }}
+                                </h3>
+
+                                <p class="schedule">
+                                    📅 {{ carona.data_hora|date:"d/m/Y - H:i" }}
+                                </p>
+
+                                <p class="spots">
+                                    👥 {{ carona.vagas }} vagas disponíveis
+                                </p>
+
+                            </div>
+
+
+                            <div class="price-action">
+
+                                <span class="amount">
+                                    R$ {{ carona.valor }}
+                                </span>
+
+                                <span class="per-seat">
+                                    por assento
+                                </span>
+
+                                <a href="{% url 'editar_carona' carona.pk %}"
+                                   class="btn-primary-sm">
+
+                                    Editar
+
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    {% empty %}
+
+                        <div class="empty-state">
+
+                            <p>
+                                Você ainda não ofereceu nenhuma carona.
+                            </p>
+
+                            {% if user.perfil.is_verificado %}
+
+                                <a href="{% url 'criar_carona' %}"
+                                   class="btn-primary">
+
+                                    + Criar uma carona
+
+                                </a>
+
+                            {% else %}
+
+                                <a href="{% url 'verificacao_cnh' %}"
+                                   class="btn-primary">
+
+                                    Verificar CNH
+
+                                </a>
+
+                            {% endif %}
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+</div>
 
 </body>
 </html>

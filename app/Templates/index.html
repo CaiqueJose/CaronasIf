@@ -13,356 +13,484 @@
 
 <div class="app-container">
 
-```
 <aside class="sidebar">
     <div class="sidebar-brand">
         <h2>Caronas IF</h2>
     </div>
 
-    <nav class="sidebar-menu">
-        <a href="{% url 'index' %}" class="menu-item active">Início</a>
-        <a href="{% url 'caronas' %}" class="menu-item">Minhas Caronas</a>
-        <a href="{% url 'chats' %}" class="menu-item">Mensagens</a>
-    </nav>
 
-    <div class="sidebar-footer">
+<nav class="sidebar-menu">
+    <a href="{% url 'index' %}" class="menu-item active">Início</a>
+    <a href="{% url 'minhas_caronas' %}" class="menu-item">Minhas Caronas</a>
+    <a href="{% url 'chats' %}" class="menu-item">Mensagens</a>
+</nav>
 
-        {% if request.user.is_staff %}
-            <a href="{% url 'admin:index' %}" class="menu-item" target="_blank">
-                Administração
-            </a>
-        {% endif %}
+<div class="sidebar-footer">
 
-        <form action="{% url 'logout' %}" method="post" class="logout-form">
+    {% if request.user.is_staff %}
+        <a href="{% url 'admin:index' %}" class="menu-item" target="_blank">
+            Administração
+        </a>
+    {% endif %}
 
-            {% csrf_token %}
+    <form action="{% url 'logout' %}" method="post" class="logout-form">
 
-            <button type="submit" class="menu-item btn-logout">
-                Sair
-            </button>
+        {% csrf_token %}
 
-        </form>
+        <button type="submit" class="menu-item btn-logout">
+            Sair
+        </button>
 
-    </div>
+    </form>
+
+</div>
+
 </aside>
-
 
 <div class="main-wrapper">
 
-    <header class="top-header">
+<header class="top-header">
 
-        <div></div>
+    <div></div>
 
-        <div class="user-profile">
+    <div class="user-profile">
 
-            <!-- BALÃO DE MENSAGENS -->
-            <a href="{% url 'chats' %}"
-               class="navbar-messages"
-               title="Mensagens"
-               aria-label="Mensagens">
+        <a href="{% url 'chats' %}"
+           class="navbar-messages"
+           title="Mensagens"
+           aria-label="Mensagens">
 
-                <svg class="message-icon"
-                     viewBox="0 0 24 24"
-                     aria-hidden="true">
+            <svg class="message-icon"
+                 viewBox="0 0 24 24"
+                 aria-hidden="true">
 
-                    <path
-                        d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5
-                           c-1.1 0-2.15-.24-3.1-.67
-                           L4 20l1.67-4.02
-                           A7.47 7.47 0 0 1 5 11.5
-                           a7.5 7.5 0 1 1 15 0Z"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                        stroke-linecap="round"
-                        stroke-linejoin="round">
-                    </path>
+                <path
+                    d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5
+                       c-1.1 0-2.15-.24-3.1-.67
+                       L4 20l1.67-4.02
+                       A7.47 7.47 0 0 1 5 11.5
+                       a7.5 7.5 0 1 1 15 0Z"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round">
+                </path>
 
-                </svg>
+            </svg>
 
-                {% if conversas_com_mensagens_novas > 0 %}
 
-                    <span class="message-notification">
-                        {{ conversas_com_mensagens_novas }}
-                    </span>
-
+            <span
+                id="messageNotification"
+                class="message-notification"
+                {% if conversas_com_mensagens_novas == 0 %}
+                    style="display: none;"
                 {% endif %}
+            >
+                {{ conversas_com_mensagens_novas }}
+            </span>
 
-            </a>
+        </a>
+
+        <a href="{% url 'perfil' %}"
+           class="menu-item"
+           style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600;">
+
+            👤 {{ request.user.username }}
+
+        </a>
+
+    </div>
+
+</header>
 
 
-            <!-- PERFIL -->
-            <a href="{% url 'perfil' %}"
-               class="menu-item"
-               style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600;">
+<main class="dashboard-content">
 
-                👤 {{ request.user.username }}
+    <section class="feed-section">
 
-            </a>
+        <div class="welcome-banner">
+
+            <h3 class="greeting">
+                Olá, {{ request.user.username }}!
+            </h3>
+
+            <h1>
+                Encontre caronas para viajar com economia e segurança
+            </h1>
+
+            <p class="subtitle">
+                Veja as caronas disponíveis perto de Muzambinho e vá junto!
+            </p>
 
         </div>
 
-    </header>
+
+        <div class="section-header">
+
+            <h2>
+                Caronas disponíveis
+            </h2>
+
+        </div>
 
 
-    <main class="dashboard-content">
+        <div class="caronas-list">
 
-        <section class="feed-section">
+            {% for carona in caronas %}
 
-            <div class="welcome-banner">
+                <div class="carona-card">
 
-                <h3 class="greeting">
-                    Olá, {{ request.user.username }}!
-                </h3>
+                    <div class="driver-info">
 
-                <h1>
-                    Encontre caronas para viajar com economia e segurança
-                </h1>
+                        <div class="avatar-placeholder">
+                            {{ carona.motorista.username|first|upper }}
+                        </div>
 
-                <p class="subtitle">
-                    Veja as caronas disponíveis perto de Muzambinho e vá junto!
-                </p>
+                        <div class="avaliacao">
 
-            </div>
+                            {% if carona.media_avaliacao %}
 
+                                ⭐ {{ carona.media_avaliacao|floatformat:1 }}
 
-            <div class="section-header">
+                            {% else %}
 
-                <h2>
-                    Caronas disponíveis
-                </h2>
+                                Sem avaliações
 
-            </div>
-
-
-            <div class="caronas-list">
-
-                {% for carona in caronas %}
-
-                    <div class="carona-card">
-
-                        <div class="driver-info">
-
-                            <div class="avatar-placeholder">
-                                {{ carona.motorista.username|first|upper }}
-                            </div>
-
-                            <div class="avaliacao">
-
-                                {% if carona.media_avaliacao %}
-
-                                    ⭐ {{ carona.media_avaliacao|floatformat:1 }}
-
-                                {% else %}
-
-                                    Sem avaliações
-
-                                {% endif %}
-
-                            </div>
-
-
-                            <div>
-
-                                <h3 class="driver-name">
-
-                                    <a href="{% url 'perfil_motorista' carona.motorista.id %}">
-                                        {{ carona.motorista.username }}
-                                    </a>
-
-                                </h3>
-
-                                <span class="badge-verified">
-                                    Verificado
-                                </span>
-
-                            </div>
+                            {% endif %}
 
                         </div>
 
 
-                        <div class="route-info">
+                        <div>
 
-                            <h3>
-                                {{ carona.origem }} ➔ {{ carona.destino }}
+                            <h3 class="driver-name">
+
+                                <a href="{% url 'perfil_motorista' carona.motorista.id %}">
+                                    {{ carona.motorista.username }}
+                                </a>
+
                             </h3>
 
-                            <p class="schedule">
-                                📅 {{ carona.data_hora|date:"d/m/Y - H:i" }}
-                            </p>
-
-                            <p class="spots">
-                                👥 {{ carona.vagas }} vagas restantes
-                            </p>
-
-                        </div>
-
-
-                        <div class="price-action">
-
-                            <span class="amount">
-                                R$ {{ carona.valor }}
+                            <span class="badge-verified">
+                                Verificado
                             </span>
-
-                            <span class="per-seat">
-                                por assento
-                            </span>
-
-                            <a href="#" class="btn-primary-sm">
-                                Solicitar
-                            </a>
 
                         </div>
 
                     </div>
 
 
-                {% empty %}
+                    <div class="route-info">
 
-                    <div class="empty-state">
+                        <h3>
+                            {{ carona.origem }} ➔ {{ carona.destino }}
+                        </h3>
 
-                        <p>
-                            Nenhuma carona disponível no momento.
+                        <p class="schedule">
+                            📅 {{ carona.data_hora|date:"d/m/Y - H:i" }}
+                        </p>
+
+                        <p class="spots">
+                            👥 {{ carona.vagas }} vagas restantes
                         </p>
 
                     </div>
 
-                {% endfor %}
 
-            </div>
+                    <div class="price-action">
 
-        </section>
+                        <span class="amount">
+                            R$ {{ carona.valor }}
+                        </span>
 
+                        <span class="per-seat">
+                            por assento
+                        </span>
 
-        <aside class="filters-sidebar">
+                        <a href="#" class="btn-primary-sm">
+                            Solicitar
+                        </a>
 
-            <div class="filters-card">
-
-                <div class="filters-header">
-
-                    <h3>
-                        Filtros
-                    </h3>
-
-                    <a href="{% url 'index' %}" class="clear-filters">
-                        Limpar
-                    </a>
+                    </div>
 
                 </div>
 
 
-                <form method="GET" action="{% url 'index' %}">
+            {% empty %}
 
-                    <!-- DESTINO -->
-                    <div class="form-group">
+                <div class="empty-state">
 
-                        <label for="destino">
-                            Destino
-                        </label>
+                    <p>
+                        Nenhuma carona disponível no momento.
+                    </p>
 
-                        <select id="destino" name="destino">
+                </div>
 
-                            <option value="">
-                                Todos os destinos
-                            </option>
+            {% endfor %}
 
-                            <option value="Portaria">
-                                Portaria
-                            </option>
+        </div>
 
-                            <option value="Prédio Principal">
-                                Prédio Principal
-                            </option>
-
-                            <option value="Biblioteca">
-                                Biblioteca
-                            </option>
-
-                            <option value="Restaurante">
-                                Restaurante
-                            </option>
-
-                            <option value="Ginásio">
-                                Ginásio
-                            </option>
-
-                            <option value="Laboratórios">
-                                Laboratórios
-                            </option>
-
-                            <option value="Fazenda">
-                                Fazenda
-                            </option>
-
-                            <option value="Centro de Vivência">
-                                Centro de Vivência
-                            </option>
-
-                        </select>
-
-                    </div>
+    </section>
 
 
-                    <!-- DATA -->
-                    <div class="form-group">
+    <aside class="filters-sidebar">
 
-                        <label for="data">
-                            Data
-                        </label>
+        <div class="filters-card">
 
-                        <input type="date"
-                               id="data"
-                               name="data">
+            <div class="filters-header">
 
-                    </div>
+                <h3>
+                    Filtros
+                </h3>
 
-
-                    <!-- HORÁRIO -->
-                    <div class="form-group">
-
-                        <label for="horario">
-                            Horário
-                        </label>
-
-                        <select id="horario" name="horario">
-
-                            <option value="">
-                                Qualquer horário
-                            </option>
-
-                            <option value="manha">
-                                Manhã (06:00 - 12:00)
-                            </option>
-
-                            <option value="tarde">
-                                Tarde (12:00 - 18:00)
-                            </option>
-
-                            <option value="noite">
-                                Noite (18:00 - 00:00)
-                            </option>
-
-                        </select>
-
-                    </div>
-
-
-                    <button type="submit" class="btn-primary">
-                        Filtrar
-                    </button>
-
-                </form>
+                <a href="{% url 'index' %}" class="clear-filters">
+                    Limpar
+                </a>
 
             </div>
 
-        </aside>
 
-    </main>
+            <form method="GET" action="{% url 'index' %}">
+
+                <!-- DESTINO -->
+                <div class="form-group">
+
+                    <label for="destino">
+                        Destino
+                    </label>
+
+                    <select id="destino" name="destino">
+
+                        <option value="">
+                            Todos os destinos
+                        </option>
+
+                        {% for destino_item in destinos %}
+
+                            <option value="{{ destino_item.nome }}"
+                                {% if request.GET.destino == destino_item.nome %}
+                                    selected
+                                {% endif %}>
+                                {{ destino_item.nome }}
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- DATA -->
+                <div class="form-group">
+
+                    <label for="data">
+                        Data
+                    </label>
+
+                    <input type="date"
+                           id="data"
+                           name="data"
+                           value="{{ request.GET.data }}">
+
+                </div>
+
+
+                <!-- HORÁRIO -->
+                <div class="form-group">
+
+                    <label for="horario">
+                        Horário
+                    </label>
+
+                    <select id="horario" name="horario">
+
+                        <option value="">
+                            Qualquer horário
+                        </option>
+
+                        <option value="manha"
+                            {% if request.GET.horario == "manha" %}selected{% endif %}>
+                            Manhã (06:00 - 12:00)
+                        </option>
+
+                        <option value="tarde"
+                            {% if request.GET.horario == "tarde" %}selected{% endif %}>
+                            Tarde (12:00 - 18:00)
+                        </option>
+
+                        <option value="noite"
+                            {% if request.GET.horario == "noite" %}selected{% endif %}>
+                            Noite (18:00 - 00:00)
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <button type="submit" class="btn-primary">
+                    Filtrar
+                </button>
+
+            </form>
+
+        </div>
+
+    </aside>
+
+</main>
 
 </div>
-```
 
 </div>
+<script>
 
+function atualizarContadorConversas() {
+
+    fetch("{% url 'contador_conversas' %}", {
+        method: "GET",
+        credentials: "same-origin",
+        cache: "no-store"
+    })
+
+    .then(function(response) {
+
+        if (!response.ok) {
+            throw new Error("Erro ao buscar contador de conversas.");
+        }
+
+        return response.json();
+
+    })
+
+    .then(function(data) {
+
+        const contador =
+            document.getElementById("messageNotification");
+
+        if (!contador) {
+            return;
+        }
+
+        const quantidade =
+            data.quantidade || 0;
+
+        if (quantidade > 0) {
+
+            contador.textContent =
+                quantidade;
+
+            contador.style.display =
+                "flex";
+
+        } else {
+
+            contador.textContent =
+                "0";
+
+            contador.style.display =
+                "none";
+
+        }
+
+    })
+
+    .catch(function(error) {
+
+        console.error(
+            "Erro ao atualizar contador de conversas:",
+            error
+        );
+
+    });
+
+}
+
+
+atualizarContadorConversas();
+
+setInterval(
+    atualizarContadorConversas,
+    2000
+);
+
+</script>
+
+</body>
+</html>
+<script>
+
+function atualizarContadorConversas() {
+
+    fetch("{% url 'contador_conversas' %}", {
+        method: "GET",
+        credentials: "same-origin",
+        cache: "no-store"
+    })
+
+    .then(function(response) {
+
+        if (!response.ok) {
+            throw new Error("Erro ao buscar contador de conversas.");
+        }
+
+        return response.json();
+
+    })
+
+    .then(function(data) {
+
+        const contador =
+            document.getElementById("messageNotification");
+
+        if (!contador) {
+            return;
+        }
+
+        const quantidade =
+            Number(data.quantidade) || 0;
+
+        if (quantidade > 0) {
+
+            contador.textContent =
+                quantidade;
+
+            contador.style.display =
+                "flex";
+
+        } else {
+
+            contador.textContent =
+                "";
+
+            contador.style.display =
+                "none";
+
+        }
+
+    })
+
+    .catch(function(error) {
+
+        console.error(
+            "Erro ao atualizar contador de conversas:",
+            error
+        );
+
+    });
+
+}
+
+
+atualizarContadorConversas();
+
+setInterval(
+    atualizarContadorConversas,
+    1000
+);
+
+</script>
 </body>
 </html>

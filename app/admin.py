@@ -1,15 +1,10 @@
 from django.contrib import admin
-from .models import (
-    Pais,
-    Estado,
-    Cidade,
-    Carona,
-    Conversa,
-    Mensagem,
-    Avaliacao,
-    PerfilUsuario,
-)
+from .models import *
 
+
+class CaronaInline(admin.TabularInline):
+    model = Carona
+    extra = 1
 
 class EstadoInline(admin.TabularInline):
     model = Estado
@@ -19,6 +14,12 @@ class EstadoInline(admin.TabularInline):
 class CidadeInline(admin.TabularInline):
     model = Cidade
     extra = 1
+    
+    
+class DestinoAdmin(admin.ModelAdmin):
+    list_display = ('nome',)
+    search_fields = ('nome',)
+    inlines = [CaronaInline]
 
 
 class PaisAdmin(admin.ModelAdmin):
@@ -49,6 +50,7 @@ class CaronaAdmin(admin.ModelAdmin):
         'valor',
         'vagas',
     )
+    
 
     search_fields = (
         'origem__nome',
@@ -99,6 +101,7 @@ class PerfilUsuarioAdmin(admin.ModelAdmin):
     search_fields = ("user__username", "user__email")
 
 
+admin.site.register(Destino, DestinoAdmin)
 admin.site.register(Carona, CaronaAdmin)
 admin.site.register(Conversa, ConversaAdmin)
 admin.site.register(Mensagem, MensagemAdmin)

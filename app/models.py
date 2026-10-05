@@ -6,6 +6,19 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 
 
+class Destino(models.Model):
+    nome = models.CharField(
+        max_length=50, 
+        verbose_name="Nome do Destino"
+    )
+    
+    class Meta:
+        verbose_name = "Destino"
+        verbose_name_plural = "Destinos"
+
+    def __str__(self):
+        return self.nome
+
 class Pais(models.Model):
     nome = models.CharField(
         max_length=50,
@@ -57,7 +70,7 @@ class Cidade(models.Model):
         verbose_name_plural = "Cidades"
 
     def __str__(self):
-        return f"{self.nome}, {self.estado}"
+        return self.nome
 
 
 class Carona(models.Model):
@@ -76,7 +89,7 @@ class Carona(models.Model):
     )
 
     destino = models.ForeignKey(
-        Cidade,
+        Destino,
         on_delete=models.CASCADE,
         related_name="caronas_destino",
         verbose_name="Destino"

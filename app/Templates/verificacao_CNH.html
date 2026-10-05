@@ -1,0 +1,317 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Verificação de CNH - Caronas IF</title>
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+
+<body>
+
+<div class="app-container">
+
+    <aside class="sidebar">
+
+        <div class="sidebar-brand">
+            <h2>Caronas IF</h2>
+        </div>
+
+        <nav class="sidebar-menu">
+
+            <a href="{% url 'index' %}" class="menu-item">
+                Início
+            </a>
+
+            <a href="{% url 'minhas_caronas' %}" class="menu-item active">
+                Minhas Caronas
+            </a>
+
+            <a href="{% url 'chats' %}" class="menu-item">
+                Mensagens
+            </a>
+
+        </nav>
+
+        <div class="sidebar-footer">
+
+            {% if request.user.is_staff %}
+
+                <a href="{% url 'admin:index' %}"
+                   class="menu-item"
+                   target="_blank">
+
+                    Administração
+
+                </a>
+
+            {% endif %}
+
+            <form action="{% url 'logout' %}"
+                  method="post"
+                  class="logout-form">
+
+                {% csrf_token %}
+
+                <button type="submit"
+                        class="menu-item btn-logout">
+
+                    Sair
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </aside>
+
+
+    <div class="main-wrapper">
+
+        <header class="top-header">
+
+            <div></div>
+
+            <div class="user-profile">
+
+                <a href="{% url 'chats' %}"
+                   class="navbar-messages"
+                   title="Mensagens"
+                   aria-label="Mensagens">
+
+                    <svg class="message-icon"
+                         viewBox="0 0 24 24"
+                         aria-hidden="true">
+
+                        <path
+                            d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5
+                               c-1.1 0-2.15-.24-3.1-.67
+                               L4 20l1.67-4.02
+                               A7.47 7.47 0 0 1 5 11.5
+                               a7.5 7.5 0 1 1 15 0Z"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                            stroke-linejoin="round">
+                        </path>
+
+                    </svg>
+
+                    {% if conversas_com_mensagens_novas > 0 %}
+
+                        <span class="message-notification">
+                            {{ conversas_com_mensagens_novas }}
+
+                        </span>
+
+                    {% endif %}
+
+                </a>
+
+
+                <a href="{% url 'perfil' %}"
+                   class="menu-item"
+                   style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600;">
+
+                    👤 {{ request.user.username }}
+
+                </a>
+
+            </div>
+
+        </header>
+
+
+        <main class="dashboard-content">
+
+            <section class="feed-section">
+
+                <div class="welcome-banner">
+
+                    <h3 class="greeting">
+                        Verificação de CNH
+                    </h3>
+
+                    <h1>
+                        Torne-se um motorista verificado
+                    </h1>
+
+                    <p class="subtitle">
+                        Preencha seus dados abaixo para solicitar a verificação.
+                    </p>
+
+                </div>
+
+
+                {% if enviado %}
+
+                    <div class="verificacao-card">
+
+                        <div class="verificacao-sucesso">
+
+                            <div class="verificacao-icone">
+                                ✓
+                            </div>
+
+                            <h2>
+                                Solicitação enviada!
+                            </h2>
+
+                            <p>
+                                Seus dados foram registrados para iniciar o processo
+                                de verificação.
+                            </p>
+
+                            <div class="dados-enviados">
+
+                                <p>
+                                    <strong>Nome:</strong>
+                                    {{ nome }} {{ sobrenome }}
+                                </p>
+
+                                <p>
+                                    <strong>Usuário:</strong>
+                                    {{ usuario }}
+                                </p>
+
+                                <p>
+                                    <strong>E-mail:</strong>
+                                    {{ email }}
+                                </p>
+
+                            </div>
+
+                            <div class="email-contato">
+
+                                <h3>
+                                    Entre em contato para finalizar a verificação
+                                </h3>
+
+                                <p>
+                                    Envie uma foto da sua CNH para:
+                                </p>
+
+                                <strong>
+                                    contato.caronasif@gmail.com
+                                </strong>
+
+                            </div>
+
+                            </a>
+
+                        </div>
+
+                    </div>
+
+
+                {% else %}
+
+                    <div class="verificacao-card">
+
+                        <form method="post"
+                              class="form-verificacao">
+
+                            {% csrf_token %}
+
+                            <div class="form-group">
+
+                                <label for="nome">
+                                    Nome
+                                </label>
+
+                                <input type="text"
+                                       id="nome"
+                                       name="nome"
+                                       placeholder="Digite seu nome"
+                                       required>
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="sobrenome">
+                                    Sobrenome
+                                </label>
+
+                                <input type="text"
+                                       id="sobrenome"
+                                       name="sobrenome"
+                                       placeholder="Digite seu sobrenome"
+                                       required>
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="usuario">
+                                    Usuário
+                                </label>
+
+                                <input type="text"
+                                       id="usuario"
+                                       name="usuario"
+                                       value="{{ request.user.username }}"
+                                       required>
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="email">
+                                    E-mail
+                                </label>
+
+                                <input type="email"
+                                       id="email"
+                                       name="email"
+                                       value="{{ request.user.email }}"
+                                       placeholder="Digite seu e-mail"
+                                       required>
+
+                            </div>
+
+
+                            <div class="form-aviso">
+
+                                <p>
+                                    Após enviar seus dados, entre em contato com
+                                    <strong>contato.caronasif@gmail.com</strong>
+                                    para concluir a verificação da CNH.
+                                </p>
+
+                            </div>
+
+
+                            <button type="submit"
+                                    class="btn-primary">
+
+                                Enviar solicitação
+
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                {% endif %}
+
+            </section>
+
+        </main>
+
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -38,7 +38,7 @@
             Caronas
         </a>
 
-        <a href="{% url 'chats' %}" class="menu-item active">
+        <a href="{% url 'chats' %}" class="menu-item active" title="Mensagens"> 
             Mensagens
         </a>
 
@@ -99,8 +99,9 @@
                 {% for item in conversas %}
 
                     <a href="{% url 'abrir_chat' item.id %}"
-                       class="chat-item {% if conversa and conversa.id == item.id %}active{% endif %}">
-
+                        class="chat-item {% if conversa and conversa.id == item.id %}active{% endif %}"
+                        data-conversa-id="{{ item.id }}">
+                       
                         <div class="chat-item-top">
 
                             <div class="chat-avatar">
@@ -137,6 +138,13 @@
                                     {% endfor %}
 
                                 </div>
+
+
+                                {% if item.mensagens_nao_lidas > 0 %}
+                                    <span class="chat-unread-count">
+                                        {{ item.mensagens_nao_lidas }}
+                                    </span>
+                                {% endif %}
 
 
                                 {% if item.carona %}
@@ -335,9 +343,12 @@
                     <div class="chat-placeholder-content">
 
                         <div class="chat-placeholder-icon">
-                            <img src="..\static\images\balaomensagem.png">
-                        </div>
-
+                            <img
+                                src="{% static 'images/balaomensagem.png' %}"
+                                alt="Mensagens"
+                                class="chat-placeholder-image"
+                            >
+                        </div>  
                         <h2>
                             Suas mensagens
                         </h2>
@@ -358,7 +369,7 @@
     </main>
 
 </div>
-```
+
 
 </div>
 
@@ -448,14 +459,15 @@
 
     }
 
-
     function atualizarMensagens() {
 
-        fetch(
-            "{% url 'buscar_mensagens' conversa.id %}"
-        )
+        fetch("{% url 'buscar_mensagens' conversa.id %}", {
+            method: "GET",
+            credentials: "same-origin",
+            cache: "no-store"
+        })
 
-        .then(response => {
+        .then(function(response) {
 
             if (!response.ok) {
                 throw new Error(
@@ -467,7 +479,7 @@
 
         })
 
-        .then(data => {
+        .then(function(data) {
 
             const mensagensExistentes =
                 new Set(
@@ -475,18 +487,15 @@
                         messagesContainer.querySelectorAll(
                             "[data-message-id]"
                         )
-                    ).map(
-                        element =>
-                            element.dataset.messageId
-                    )
+                    ).map(function(element) {
+                        return element.dataset.messageId;
+                    })
                 );
-
 
             const emptyMessage =
                 document.getElementById(
                     "emptyMessages"
                 );
-
 
             if (
                 data.mensagens.length > 0 &&
@@ -495,36 +504,39 @@
                 emptyMessage.remove();
             }
 
+            data.mensagens.forEach(
+                function(mensagem) {
 
-            data.mensagens.forEach(mensagem => {
+                    if (
+                        !mensagensExistentes.has(
+                            String(mensagem.id)
+                        )
+                    ) {
 
-                if (
-                    !mensagensExistentes.has(
-                        String(mensagem.id)
-                    )
-                ) {
+                        messagesContainer.appendChild(
+                            criarMensagem(mensagem)
+                        );
 
-                    messagesContainer.appendChild(
-                        criarMensagem(mensagem)
-                    );
+                    }
 
                 }
-
-            });
-
+            );
 
             rolarParaBaixo();
 
+            atualizarContadores();
+
         })
 
-        .catch(error => {
+        .catch(function(error) {
 
-            console.error(error);
+            console.error(
+                "Erro ao atualizar mensagens:",
+                error
+            );
 
         });
-
     }
-
 
     chatForm.addEventListener(
         "submit",
@@ -630,6 +642,8 @@
         }
     );
 
+    
+
 
     messageInput.addEventListener(
         "keydown",
@@ -649,12 +663,17 @@
 
     rolarParaBaixo();
 
+    atualizarContadores();
+
+    setInterval(
+        atualizarContadores,
+        2000
+    );
 
     setInterval(
         atualizarMensagens,
         3000
     );
-
 </script>
 
 {% endif %}
