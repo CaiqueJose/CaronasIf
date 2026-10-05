@@ -301,7 +301,7 @@ class MinhasCaronasView(
 
         return render(
             request,
-            "caronas.html",
+            "carona.html",
             {
                 "caronas": caronas
             }
