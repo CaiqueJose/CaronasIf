@@ -83,9 +83,7 @@
             <span
                 id="messageNotification"
                 class="message-notification"
-                {% if conversas_com_mensagens_novas == 0 %}
-                    style="display: none;"
-                {% endif %}
+                style="display: none;"
             >
                 {{ conversas_com_mensagens_novas }}
             </span>
@@ -354,143 +352,44 @@ function atualizarContadorConversas() {
         credentials: "same-origin",
         cache: "no-store"
     })
-
     .then(function(response) {
-
-        if (!response.ok) {
-            throw new Error("Erro ao buscar contador de conversas.");
-        }
-
+        if (!response.ok) throw new Error("Erro ao buscar contador.");
         return response.json();
-
     })
-
     .then(function(data) {
 
-        const contador =
-            document.getElementById("messageNotification");
+        var contador = document.getElementById("messageNotification");
+        if (!contador) return;
 
-        if (!contador) {
-            return;
-        }
-
-        const quantidade =
-            data.quantidade || 0;
+        var quantidade = Number(data.quantidade) || 0;
 
         if (quantidade > 0) {
-
-            contador.textContent =
-                quantidade;
-
-            contador.style.display =
-                "flex";
-
+            contador.textContent = quantidade;
+            contador.style.display = "flex";
         } else {
-
-            contador.textContent =
-                "0";
-
-            contador.style.display =
-                "none";
-
+            contador.textContent = "";
+            contador.style.display = "none";
         }
 
     })
-
     .catch(function(error) {
-
-        console.error(
-            "Erro ao atualizar contador de conversas:",
-            error
-        );
-
+        console.error("Erro ao atualizar contador:", error);
     });
 
 }
 
-
+// Inicia imediatamente e faz polling a cada 2 segundos
 atualizarContadorConversas();
+setInterval(atualizarContadorConversas, 2000);
 
-setInterval(
-    atualizarContadorConversas,
-    2000
-);
+// Atualiza instantaneamente ao voltar para esta aba
+document.addEventListener("visibilitychange", function() {
+    if (document.visibilityState === "visible") {
+        atualizarContadorConversas();
+    }
+});
 
 </script>
 
-</body>
-</html>
-<script>
-
-function atualizarContadorConversas() {
-
-    fetch("{% url 'contador_conversas' %}", {
-        method: "GET",
-        credentials: "same-origin",
-        cache: "no-store"
-    })
-
-    .then(function(response) {
-
-        if (!response.ok) {
-            throw new Error("Erro ao buscar contador de conversas.");
-        }
-
-        return response.json();
-
-    })
-
-    .then(function(data) {
-
-        const contador =
-            document.getElementById("messageNotification");
-
-        if (!contador) {
-            return;
-        }
-
-        const quantidade =
-            Number(data.quantidade) || 0;
-
-        if (quantidade > 0) {
-
-            contador.textContent =
-                quantidade;
-
-            contador.style.display =
-                "flex";
-
-        } else {
-
-            contador.textContent =
-                "";
-
-            contador.style.display =
-                "none";
-
-        }
-
-    })
-
-    .catch(function(error) {
-
-        console.error(
-            "Erro ao atualizar contador de conversas:",
-            error
-        );
-
-    });
-
-}
-
-
-atualizarContadorConversas();
-
-setInterval(
-    atualizarContadorConversas,
-    1000
-);
-
-</script>
 </body>
 </html>

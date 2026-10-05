@@ -373,6 +373,66 @@
 
 </div>
 
+<!-- Contadores: sempre ativos, independente de conversa aberta -->
+<script>
+
+    function atualizarContadores() {
+
+        fetch("{% url 'contadores_chat' %}", {
+            method: "GET",
+            credentials: "same-origin",
+            cache: "no-store"
+        })
+        .then(function(response) {
+            if (!response.ok) throw new Error("Erro ao buscar contadores.");
+            return response.json();
+        })
+        .then(function(data) {
+
+            var contadores = data.contadores || {};
+
+            document.querySelectorAll(".chat-item[data-conversa-id]")
+                .forEach(function(item) {
+
+                    var id    = item.dataset.conversaId;
+                    var count = contadores[id] || 0;
+                    var info  = item.querySelector(".chat-item-info");
+                    var badge = item.querySelector(".chat-unread-count");
+
+                    if (count > 0) {
+                        if (!badge) {
+                            badge = document.createElement("span");
+                            badge.className = "chat-unread-count";
+                            if (info) info.appendChild(badge);
+                        }
+                        badge.textContent   = count;
+                        badge.style.display = "";
+                    } else {
+                        if (badge) badge.style.display = "none";
+                    }
+
+                });
+
+        })
+        .catch(function(error) {
+            console.error("Erro ao atualizar contadores:", error);
+        });
+
+    }
+
+    // Inicia polling de contadores imediatamente e a cada 2 segundos
+    atualizarContadores();
+    setInterval(atualizarContadores, 2000);
+
+    // Atualiza ao voltar para esta aba
+    document.addEventListener("visibilitychange", function() {
+        if (document.visibilityState === "visible") {
+            atualizarContadores();
+        }
+    });
+
+</script>
+
 {% if conversa %}
 
 <script>
@@ -497,12 +557,7 @@
                     "emptyMessages"
                 );
 
-            if (
-                data.mensagens.length > 0 &&
-                emptyMessage
-            ) {
-                emptyMessage.remove();
-            }
+            var houveNova = false;
 
             data.mensagens.forEach(
                 function(mensagem) {
@@ -513,18 +568,26 @@
                         )
                     ) {
 
+                        if (emptyMessage) {
+                            emptyMessage.remove();
+                            emptyMessage = null;
+                        }
+
                         messagesContainer.appendChild(
                             criarMensagem(mensagem)
                         );
+
+                        houveNova = true;
 
                     }
 
                 }
             );
 
-            rolarParaBaixo();
-
-            atualizarContadores();
+            if (houveNova) {
+                rolarParaBaixo();
+                atualizarContadores();
+            }
 
         })
 
@@ -621,6 +684,9 @@
 
                 rolarParaBaixo();
 
+                // Atualiza contadores imediatamente apos envio
+                atualizarContadores();
+
             })
 
             .catch(error => {
@@ -662,18 +728,10 @@
 
 
     rolarParaBaixo();
+    atualizarMensagens();
 
-    atualizarContadores();
-
-    setInterval(
-        atualizarContadores,
-        2000
-    );
-
-    setInterval(
-        atualizarMensagens,
-        3000
-    );
+    // Polling de novas mensagens a cada 2 segundos
+    setInterval(atualizarMensagens, 2000);
 </script>
 
 {% endif %}

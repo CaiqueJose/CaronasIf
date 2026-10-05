@@ -5,7 +5,7 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.models import User
 from django.contrib import messages
-from django.db.models import Count, Avg, Q
+from django.db.models import Count, Avg, Q, Exists, OuterRef
 from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse_lazy
@@ -180,12 +180,16 @@ class IndexView(
 
         conversas_com_mensagens_novas = (
             Conversa.objects
+            .filter(participantes=self.request.user)
             .filter(
-                participantes=self.request.user,
-                mensagens__lida=False
-            )
-            .exclude(
-                mensagens__remetente=self.request.user
+                Exists(
+                    Mensagem.objects.filter(
+                        conversa=OuterRef('pk'),
+                        lida=False
+                    ).exclude(
+                        remetente=self.request.user
+                    )
+                )
             )
             .distinct()
             .count()
@@ -212,12 +216,16 @@ class ContadorConversasView(
 
         quantidade = (
             Conversa.objects
+            .filter(participantes=request.user)
             .filter(
-                participantes=request.user,
-                mensagens__lida=False
-            )
-            .exclude(
-                mensagens__remetente=request.user
+                Exists(
+                    Mensagem.objects.filter(
+                        conversa=OuterRef('pk'),
+                        lida=False
+                    ).exclude(
+                        remetente=request.user
+                    )
+                )
             )
             .distinct()
             .count()
@@ -687,20 +695,14 @@ class ContadoresChatView(
 
         conversas = (
             Conversa.objects
-            .filter(
-                participantes=request.user
-            )
+            .filter(participantes=request.user)
             .annotate(
                 mensagens_nao_lidas=Count(
                     "mensagens",
                     filter=(
-                        Q(
-                            mensagens__lida=False
-                        )
+                        Q(mensagens__lida=False)
                         &
-                        ~Q(
-                            mensagens__remetente=request.user
-                        )
+                        ~Q(mensagens__remetente=request.user)
                     ),
                     distinct=True
                 )
