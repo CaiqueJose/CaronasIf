@@ -23,9 +23,21 @@
     <a href="{% url 'index' %}" class="menu-item active">Início</a>
     <a href="{% url 'minhas_caronas' %}" class="menu-item">Minhas Caronas</a>
     <a href="{% url 'chats' %}" class="menu-item">Mensagens</a>
+    {% if contexto_motorista %}
+        <a href="{% url 'criar_carona' %}" class="menu-item">Cadastrar Carona</a>
+    {% elif request.user.is_authenticated %}
+        <a href="{% url 'verificacao_cnh' %}" class="menu-item">Verificação de CNH</a>
+    {% endif %}
 </nav>
 
 <div class="sidebar-footer">
+
+    {% if request.user.is_staff or request.user.is_superuser %}
+        <a href="{% url 'gerenciar_solicitacoes_cnh' %}"
+        class="menu-item">
+            Aprovar Motoristas
+        </a>
+    {% endif %}
 
     {% if request.user.is_staff %}
         <a href="{% url 'admin:index' %}" class="menu-item" target="_blank">
@@ -206,9 +218,30 @@
                             por assento
                         </span>
 
-                        <a href="#" class="btn-primary-sm">
-                            Solicitar
-                        </a>
+                        {% if request.user.is_authenticated and carona.motorista.id == request.user.id %}
+                            <span class="badge-driver" style="background:#e2e8f0; color:#475569; padding:8px 12px; border-radius:6px; font-size:12px; font-weight:700; text-align:center;">
+                                Sua carona
+                            </span>
+                        {% elif carona.vagas == 0 %}
+                            <span class="badge-esgotada" style="background:#fee2e2; color:#b91c1c; padding:8px 12px; border-radius:6px; font-size:12px; font-weight:700; text-align:center;">
+                                Vagas esgotadas
+                            </span>
+                        {% else %}
+                            <button
+                                type="button"
+                                class="btn-primary-sm btn-abrir-modal-solicitar"
+                                data-carona-id="{{ carona.id }}"
+                                data-origem="{{ carona.origem.nome }}"
+                                data-destino="{{ carona.destino.nome }}"
+                                data-motorista="{{ carona.motorista.username }}"
+                                data-data-hora="{{ carona.data_hora|date:'d/m/Y - H:i' }}"
+                                data-valor="{{ carona.valor }}"
+                                data-vagas="{{ carona.vagas }}"
+                                data-chat-url="{% url 'iniciar_chat_carona' carona.id %}"
+                            >
+                                Solicitar
+                            </button>
+                        {% endif %}
 
                     </div>
 
@@ -343,6 +376,45 @@
 </div>
 
 </div>
+<!-- MODAL DE SOLICITAÇÃO DE CARONA -->
+<div id="modalSolicitarCarona" class="modal-solicitar-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+    <div class="modal-solicitar-card">
+        <div class="modal-solicitar-header">
+            <h3 id="modalTitulo">🚗 Solicitar Carona</h3>
+            <button type="button" class="btn-close-modal" id="btnFecharModalSolicitar" aria-label="Fechar">✕</button>
+        </div>
+        <div class="modal-solicitar-body">
+            <div class="modal-rota-banner">
+                <span class="modal-rota-cidades" id="modalRotaTexto">Origem ➔ Destino</span>
+                <span id="modalVagasBadge" style="background: #10b981; color: #fff; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 12px;">3 vagas</span>
+            </div>
+            <div class="modal-info-grid">
+                <div class="modal-info-box">
+                    <div class="modal-info-label">Motorista</div>
+                    <div class="modal-info-value" id="modalMotoristaTexto">--</div>
+                </div>
+                <div class="modal-info-box">
+                    <div class="modal-info-label">Valor</div>
+                    <div class="modal-info-value" id="modalValorTexto">R$ 0,00</div>
+                </div>
+                <div class="modal-info-box" style="grid-column: span 2;">
+                    <div class="modal-info-label">Data e Horário</div>
+                    <div class="modal-info-value" id="modalDataHoraTexto">--</div>
+                </div>
+            </div>
+            <p class="modal-aviso-texto">
+                💬 <strong>Importante:</strong> Para solicitar uma vaga nesta carona, você será redirecionado para o chat com o motorista para combinar os detalhes e confirmar a sua solicitação.
+            </p>
+        </div>
+        <div class="modal-solicitar-footer">
+            <button type="button" class="btn-modal-cancelar" id="btnCancelarModalSolicitar">Cancelar</button>
+            <a href="#" class="btn-modal-confirmar" id="btnIrChatMotorista">
+                💬 Ir para o Chat com o Motorista
+            </a>
+        </div>
+    </div>
+</div>
+
 <script>
 
 function atualizarContadorConversas() {
@@ -387,6 +459,67 @@ document.addEventListener("visibilitychange", function() {
     if (document.visibilityState === "visible") {
         atualizarContadorConversas();
     }
+});
+
+// Modal de Solicitação de Carona
+document.addEventListener("DOMContentLoaded", function() {
+    var modalSolicitar = document.getElementById("modalSolicitarCarona");
+    var btnFecharModal = document.getElementById("btnFecharModalSolicitar");
+    var btnCancelarModal = document.getElementById("btnCancelarModalSolicitar");
+    var btnIrChatMotorista = document.getElementById("btnIrChatMotorista");
+
+    var modalRotaTexto = document.getElementById("modalRotaTexto");
+    var modalVagasBadge = document.getElementById("modalVagasBadge");
+    var modalMotoristaTexto = document.getElementById("modalMotoristaTexto");
+    var modalValorTexto = document.getElementById("modalValorTexto");
+    var modalDataHoraTexto = document.getElementById("modalDataHoraTexto");
+
+    function fecharModalSolicitacao() {
+        if (modalSolicitar) {
+            modalSolicitar.style.display = "none";
+        }
+    }
+
+    document.querySelectorAll(".btn-abrir-modal-solicitar").forEach(function(btn) {
+        btn.addEventListener("click", function() {
+            var origem = this.dataset.origem || "";
+            var destino = this.dataset.destino || "";
+            var motorista = this.dataset.motorista || "";
+            var dataHora = this.dataset.dataHora || "";
+            var valor = this.dataset.valor || "0.00";
+            var vagas = this.dataset.vagas || "0";
+            var chatUrl = this.dataset.chatUrl || "#";
+
+            if (modalRotaTexto) modalRotaTexto.textContent = origem + " ➔ " + destino;
+            if (modalVagasBadge) modalVagasBadge.textContent = vagas + (vagas === "1" ? " vaga disponível" : " vagas disponíveis");
+            if (modalMotoristaTexto) modalMotoristaTexto.textContent = motorista;
+            if (modalValorTexto) modalValorTexto.textContent = "R$ " + valor;
+            if (modalDataHoraTexto) modalDataHoraTexto.textContent = dataHora;
+            if (btnIrChatMotorista) btnIrChatMotorista.href = chatUrl;
+
+            if (modalSolicitar) modalSolicitar.style.display = "flex";
+        });
+    });
+
+    if (btnFecharModal) {
+        btnFecharModal.addEventListener("click", fecharModalSolicitacao);
+    }
+
+    if (btnCancelarModal) {
+        btnCancelarModal.addEventListener("click", fecharModalSolicitacao);
+    }
+
+    window.addEventListener("click", function(event) {
+        if (event.target === modalSolicitar) {
+            fecharModalSolicitacao();
+        }
+    });
+
+    document.addEventListener("keydown", function(event) {
+        if (event.key === "Escape" && modalSolicitar && modalSolicitar.style.display === "flex") {
+            fecharModalSolicitacao();
+        }
+    });
 });
 
 </script>

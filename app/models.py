@@ -308,8 +308,56 @@ class SolicitacaoCNH(models.Model):
         verbose_name_plural = "Solicitações de CNH"
         ordering = ["-data_solicitacao"]
 
+class SolicitacaoCarona(models.Model):
+    class Status(models.TextChoices):
+        PENDENTE = "pendente", "Pendente"
+        ACEITA = "aceita", "Aceita"
+        RECUSADA = "recusada", "Recusada"
+        CANCELADA = "cancelada", "Cancelada"
+
+    carona = models.ForeignKey(
+        Carona,
+        on_delete=models.CASCADE,
+        related_name="solicitacoes",
+        verbose_name="Carona"
+    )
+    passageiro = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="solicitacoes_carona",
+        verbose_name="Passageiro"
+    )
+    conversa = models.ForeignKey(
+        Conversa,
+        on_delete=models.CASCADE,
+        related_name="solicitacoes",
+        null=True,
+        blank=True,
+        verbose_name="Conversa"
+    )
+    status = models.CharField(
+        max_length=15,
+        choices=Status.choices,
+        default=Status.PENDENTE,
+        verbose_name="Status"
+    )
+    criado_em = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Criado em"
+    )
+    respondido_em = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Respondido em"
+    )
+
+    class Meta:
+        verbose_name = "Solicitação de Carona"
+        verbose_name_plural = "Solicitações de Carona"
+        ordering = ["-criado_em"]
+
     def __str__(self):
-        return f"{self.user.username} - {self.get_status_display()}"
+        return f"{self.passageiro.username} -> {self.carona} ({self.get_status_display()})"
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)

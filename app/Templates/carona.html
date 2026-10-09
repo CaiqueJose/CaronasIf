@@ -33,9 +33,26 @@
                 Mensagens
             </a>
 
+            {% if contexto_motorista %}
+                <a href="{% url 'criar_carona' %}" class="menu-item">
+                    Cadastrar Carona
+                </a>
+            {% elif request.user.is_authenticated %}
+                <a href="{% url 'verificacao_cnh' %}" class="menu-item">
+                    Verificação de CNH
+                </a>
+            {% endif %}
+
         </nav>
 
         <div class="sidebar-footer">
+
+            {% if request.user.is_staff or request.user.is_superuser %}
+                <a href="{% url 'gerenciar_solicitacoes_cnh' %}"
+                class="menu-item">
+                    Aprovar Motoristas
+                </a>
+            {% endif %}
 
             {% if request.user.is_staff %}
 
@@ -155,7 +172,7 @@
                 </div>
 
 
-                {% if user.perfil.is_verificado %}
+                {% if contexto_motorista %}
 
                     <div style="margin-bottom: 20px;">
 
@@ -245,7 +262,7 @@
                                 Você ainda não ofereceu nenhuma carona.
                             </p>
 
-                            {% if user.perfil.is_verificado %}
+                            {% if contexto_motorista %}
 
                                 <a href="{% url 'criar_carona' %}"
                                    class="btn-primary">

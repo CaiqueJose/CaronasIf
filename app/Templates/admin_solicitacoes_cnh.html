@@ -1,0 +1,383 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Aprovação de Motoristas - Caronas IF</title>
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <style>
+        .approval-container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .approval-heading {
+            margin-bottom: 24px;
+        }
+
+        .approval-heading h1 {
+            margin-bottom: 8px;
+        }
+
+        .approval-heading p {
+            color: #666;
+        }
+
+        .approval-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e5e7eb;
+        }
+
+        .approval-card h2 {
+            margin-top: 0;
+            margin-bottom: 16px;
+            color: #2e7d32;
+        }
+
+        .approval-details p {
+            margin: 8px 0;
+            overflow-wrap: anywhere;
+        }
+
+        .approval-status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            background: #fff3cd;
+            color: #856404;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .approval-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 22px;
+        }
+
+        .approval-actions form {
+            margin: 0;
+        }
+
+        .approval-button {
+            border: none;
+            border-radius: 7px;
+            padding: 11px 18px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .approval-button:focus-visible {
+            outline: 3px solid #9ca3af;
+            outline-offset: 3px;
+        }
+
+        .approval-button.approve {
+            background: #2e7d32;
+        }
+
+        .approval-button.approve:hover {
+            background: #1b5e20;
+        }
+
+        .approval-button.reject {
+            background: #c62828;
+        }
+
+        .approval-button.reject:hover {
+            background: #a61b1b;
+        }
+
+        .approval-empty {
+            background: #fff;
+            padding: 35px 24px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+        }
+
+        .approval-empty h2 {
+            margin-top: 0;
+        }
+
+        .approval-message {
+            background: #e8f5e9;
+            color: #1b5e20;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 18px;
+        }
+
+        .approval-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        @media (max-width: 600px) {
+            .approval-card {
+                padding: 18px;
+            }
+
+            .approval-actions {
+                flex-direction: column;
+            }
+
+            .approval-actions form,
+            .approval-button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="app-container">
+
+    <aside class="sidebar">
+
+        <div class="sidebar-brand">
+            <h2>Caronas IF</h2>
+        </div>
+
+        <nav class="sidebar-menu">
+
+            <a href="{% url 'index' %}" class="menu-item">
+                Início
+            </a>
+
+            <a href="{% url 'minhas_caronas' %}" class="menu-item">
+                Minhas Caronas
+            </a>
+
+            <a href="{% url 'chats' %}" class="menu-item">
+                Mensagens
+            </a>
+
+            {% if contexto_motorista %}
+                <a href="{% url 'criar_carona' %}" class="menu-item">
+                    Cadastrar Carona
+                </a>
+            {% elif request.user.is_authenticated %}
+                <a href="{% url 'verificacao_cnh' %}" class="menu-item">
+                    Verificação de CNH
+                </a>
+            {% endif %}
+
+        </nav>
+
+        <div class="sidebar-footer">
+
+            {% if request.user.is_staff or request.user.is_superuser %}
+                <a href="{% url 'gerenciar_solicitacoes_cnh' %}"
+                class="menu-item">
+                    Aprovar Motoristas
+                </a>
+            {% endif %}
+
+            <a href="{% url 'admin:index' %}"
+               class="menu-item"
+               target="_blank">
+                Administração Django
+            </a>
+
+            <form action="{% url 'logout' %}"
+                  method="post"
+                  class="logout-form">
+
+                {% csrf_token %}
+
+                <button type="submit" class="menu-item btn-logout">
+                    Sair
+                </button>
+
+            </form>
+
+        </div>
+
+    </aside>
+
+
+    <div class="main-wrapper">
+
+        <header class="top-header">
+
+            <div></div>
+
+            <div class="user-profile">
+                <a href="{% url 'perfil' %}" class="menu-item">
+                    👤 {{ request.user.username }}
+                </a>
+            </div>
+
+        </header>
+
+
+        <main class="dashboard-content">
+
+            <section class="feed-section approval-container">
+
+                <div class="approval-heading">
+
+                    <h1>Solicitações de CNH</h1>
+
+                    <p>
+                        Analise os pedidos recebidos e decida quem poderá
+                        atuar como motorista no Caronas IF.
+                    </p>
+
+                </div>
+
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="approval-message
+                            {% if message.tags == 'error' %}approval-error{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+
+                {% if solicitacoes %}
+
+                    {% for solicitacao in solicitacoes %}
+
+                        <article class="approval-card">
+
+                            <h2>
+                                {{ solicitacao.nome }}
+                                {{ solicitacao.sobrenome }}
+                            </h2>
+
+                            <div class="approval-details">
+
+                                <p>
+                                    <strong>Usuário da conta:</strong>
+                                    {{ solicitacao.user.username }}
+                                </p>
+
+                                <p>
+                                    <strong>Usuário informado:</strong>
+                                    {{ solicitacao.usuario_informado }}
+                                </p>
+
+                                <p>
+                                    <strong>E-mail informado:</strong>
+                                    {{ solicitacao.email_informado }}
+                                </p>
+
+                                <p>
+                                    <strong>Data do pedido:</strong>
+                                    {{ solicitacao.data_solicitacao|date:"d/m/Y H:i" }}
+                                </p>
+
+                                <p>
+                                    <strong>Status:</strong>
+                                    <span class="approval-status">
+                                        {{ solicitacao.get_status_display }}
+                                    </span>
+                                </p>
+
+                            </div>
+
+                            <div class="approval-message">
+                                <strong>Conferência da CNH:</strong>
+                                antes de aprovar, confirme que a documentação
+                                do solicitante foi recebida e conferida.
+                                O formulário, sozinho, não comprova a validade
+                                da habilitação.
+                            </div>
+
+                            <div class="approval-actions">
+
+                                <form method="post">
+                                    {% csrf_token %}
+
+                                    <input
+                                        type="hidden"
+                                        name="solicitacao_id"
+                                        value="{{ solicitacao.pk }}">
+
+                                    <input
+                                        type="hidden"
+                                        name="acao"
+                                        value="aprovar">
+
+                                    <button
+                                        type="submit"
+                                        class="approval-button approve"
+                                        onclick="return confirm('Confirma a aprovação deste motorista?');">
+
+                                        ✓ Aprovar motorista
+
+                                    </button>
+                                </form>
+
+
+                                <form method="post">
+                                    {% csrf_token %}
+
+                                    <input
+                                        type="hidden"
+                                        name="solicitacao_id"
+                                        value="{{ solicitacao.pk }}">
+
+                                    <input
+                                        type="hidden"
+                                        name="acao"
+                                        value="recusar">
+
+                                    <button
+                                        type="submit"
+                                        class="approval-button reject"
+                                        onclick="return confirm('Tem certeza de que deseja recusar esta solicitação?');">
+
+                                        ✕ Recusar solicitação
+
+                                    </button>
+                                </form>
+
+                            </div>
+
+                        </article>
+
+                    {% endfor %}
+
+                {% else %}
+
+                    <div class="approval-empty">
+
+                        <h2>Nenhuma solicitação pendente</h2>
+
+                        <p>
+                            Não há pedidos aguardando aprovação no momento.
+                        </p>
+
+                    </div>
+
+                {% endif %}
+
+            </section>
+
+        </main>
+
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -42,9 +42,26 @@
             Mensagens
         </a>
 
+        {% if contexto_motorista %}
+            <a href="{% url 'criar_carona' %}" class="menu-item">
+                Cadastrar Carona
+            </a>
+        {% elif request.user.is_authenticated %}
+            <a href="{% url 'verificacao_cnh' %}" class="menu-item">
+                Verificação de CNH
+            </a>
+        {% endif %}
+
     </nav>
 
     <div class="sidebar-footer">
+
+        {% if request.user.is_staff or request.user.is_superuser %}
+            <a href="{% url 'gerenciar_solicitacoes_cnh' %}"
+            class="menu-item">
+                Aprovar Motoristas
+            </a>
+        {% endif %}
 
         <a href="{% url 'perfil' %}" class="menu-item">
             Perfil
@@ -301,6 +318,74 @@
 
                 </div>
 
+                {% if conversa.carona %}
+                    <div class="solicitacao-chat-wrapper" id="solicitacaoCaronaWrapper">
+                        <div class="solicitacao-chat-header">
+                            <span class="solicitacao-chat-title">
+                                🚗 Carona: {{ conversa.carona.origem }} ➔ {{ conversa.carona.destino }} (R$ {{ conversa.carona.valor }})
+                            </span>
+                            <span class="solicitacao-chat-vagas" id="solicitacaoVagasInfo">
+                                {{ conversa.carona.vagas }} vaga{{ conversa.carona.vagas|pluralize:"s" }} restante{{ conversa.carona.vagas|pluralize:"s" }}
+                            </span>
+                        </div>
+
+                        <div class="solicitacao-chat-body" id="solicitacaoChatBody">
+                            {% if eh_passageiro %}
+                                {% if not solicitacao %}
+                                    {% if conversa.carona.vagas > 0 %}
+                                        <button type="button" class="btn-solicitar-chat" id="btnSolicitarVagaChat">
+                                            🙋 Solicitar Vaga nesta Carona
+                                        </button>
+                                    {% else %}
+                                        <div class="status-badge-recusada">
+                                            ⚠️ Não há mais vagas disponíveis nesta carona.
+                                        </div>
+                                    {% endif %}
+                                {% elif solicitacao.status == "pendente" %}
+                                    <div class="status-badge-pendente">
+                                        ⏳ Solicitação enviada! Aguardando confirmação do motorista {{ conversa.carona.motorista.username }}.
+                                    </div>
+                                {% elif solicitacao.status == "aceita" %}
+                                    <div class="status-badge-aceita">
+                                        ✅ Sua solicitação foi aceita! Vaga confirmada com o motorista.
+                                    </div>
+                                {% elif solicitacao.status == "recusada" %}
+                                    <div class="status-badge-recusada">
+                                        ❌ Sua solicitação foi recusada pelo motorista.
+                                    </div>
+                                {% endif %}
+                            {% elif eh_motorista %}
+                                {% if solicitacao and solicitacao.status == "pendente" %}
+                                    <div class="motorista-solicitacao-card" id="cardSolicitacaoMotorista" data-id="{{ solicitacao.id }}">
+                                        <div class="motorista-solicitacao-text">
+                                            🙋 <strong>{{ solicitacao.passageiro.username }}</strong> solicitou 1 vaga nesta carona.
+                                        </div>
+                                        <div class="motorista-solicitacao-actions">
+                                            <button type="button" class="btn-aceitar-solicitacao" id="btnAceitarSolicitacao" data-id="{{ solicitacao.id }}">
+                                                ✅ Aceitar Solicitação ({{ conversa.carona.vagas }} vagas)
+                                            </button>
+                                            <button type="button" class="btn-recusar-solicitacao" id="btnRecusarSolicitacao" data-id="{{ solicitacao.id }}">
+                                                ❌ Recusar
+                                            </button>
+                                        </div>
+                                    </div>
+                                {% elif solicitacao and solicitacao.status == "aceita" %}
+                                    <div class="status-badge-aceita">
+                                        ✅ Você aceitou a solicitação de {{ solicitacao.passageiro.username }}. Vagas restantes: {{ conversa.carona.vagas }}.
+                                    </div>
+                                {% elif solicitacao and solicitacao.status == "recusada" %}
+                                    <div class="status-badge-recusada">
+                                        ❌ Você recusou a solicitação de {{ solicitacao.passageiro.username }}.
+                                    </div>
+                                {% else %}
+                                    <div style="font-size: 13px; color: #64748b;">
+                                        ℹ️ Aguardando solicitação de vaga do passageiro.
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
 
                 <form
                     class="chat-form"
@@ -443,6 +528,23 @@
     const sendButton = document.getElementById("sendButton");
 
     const usuarioAtualId = "{{ request.user.id }}";
+    const conversaId = "{{ conversa.id }}";
+
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
 
 
     function rolarParaBaixo() {
@@ -589,6 +691,16 @@
                 atualizarContadores();
             }
 
+            // Atualiza status de solicitação e vagas se presente
+            if (data.vagas !== null && data.vagas !== undefined) {
+                const vagasInfo = document.getElementById("solicitacaoVagasInfo");
+                if (vagasInfo) {
+                    vagasInfo.textContent = data.vagas + (data.vagas === 1 ? " vaga restante" : " vagas restantes");
+                }
+            }
+
+            atualizarStatusSolicitacaoNoDOM(data);
+
         })
 
         .catch(function(error) {
@@ -600,6 +712,188 @@
 
         });
     }
+
+    function atualizarStatusSolicitacaoNoDOM(data) {
+        const body = document.getElementById("solicitacaoChatBody");
+        if (!body) return;
+
+        const sol = data.solicitacao;
+        const ehMotorista = data.eh_motorista;
+        const vagas = data.vagas;
+
+        if (ehMotorista) {
+            if (sol && sol.status === "pendente") {
+                const cardExistente = document.getElementById("cardSolicitacaoMotorista");
+                if (!cardExistente || cardExistente.dataset.id !== String(sol.id)) {
+                    body.innerHTML = `
+                        <div class="motorista-solicitacao-card" id="cardSolicitacaoMotorista" data-id="${sol.id}">
+                            <div class="motorista-solicitacao-text">
+                                🙋 <strong>${sol.passageiro}</strong> solicitou 1 vaga nesta carona.
+                            </div>
+                            <div class="motorista-solicitacao-actions">
+                                <button type="button" class="btn-aceitar-solicitacao" id="btnAceitarSolicitacao" data-id="${sol.id}">
+                                    ✅ Aceitar Solicitação (${vagas} vagas)
+                                </button>
+                                <button type="button" class="btn-recusar-solicitacao" id="btnRecusarSolicitacao" data-id="${sol.id}">
+                                    ❌ Recusar
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+                // Sempre (re)vincula os botões após atualizar o DOM
+                vincularBotoesMotorista();
+            } else if (sol && sol.status === "aceita") {
+                body.innerHTML = `
+                    <div class="status-badge-aceita">
+                        ✅ Você aceitou a solicitação de ${sol.passageiro}. Vagas restantes: ${vagas}.
+                    </div>
+                `;
+            } else if (sol && sol.status === "recusada") {
+                body.innerHTML = `
+                    <div class="status-badge-recusada">
+                        ❌ Você recusou a solicitação de ${sol.passageiro}.
+                    </div>
+                `;
+            }
+            // ehMotorista=true sem sol: não altera o DOM (mantém "Aguardando solicitação")
+        } else {
+            // Passageiro
+            if (!sol) {
+                if (vagas > 0) {
+                    if (!document.getElementById("btnSolicitarVagaChat")) {
+                        body.innerHTML = `
+                            <button type="button" class="btn-solicitar-chat" id="btnSolicitarVagaChat">
+                                🙋 Solicitar Vaga nesta Carona
+                            </button>
+                        `;
+                        vincularBotaoSolicitarPassageiro();
+                    }
+                } else {
+                    body.innerHTML = `
+                        <div class="status-badge-recusada">
+                            ⚠️ Não há mais vagas disponíveis nesta carona.
+                        </div>
+                    `;
+                }
+            } else if (sol.status === "pendente") {
+                body.innerHTML = `
+                    <div class="status-badge-pendente">
+                        ⏳ Solicitação enviada! Aguardando confirmação do motorista.
+                    </div>
+                `;
+            } else if (sol.status === "aceita") {
+                body.innerHTML = `
+                    <div class="status-badge-aceita">
+                        ✅ Sua solicitação foi aceita! Vaga confirmada com o motorista.
+                    </div>
+                `;
+            } else if (sol.status === "recusada") {
+                body.innerHTML = `
+                    <div class="status-badge-recusada">
+                        ❌ Sua solicitação foi recusada pelo motorista.
+                    </div>
+                `;
+            }
+        }
+    }
+
+    function vincularBotaoSolicitarPassageiro() {
+        const btn = document.getElementById("btnSolicitarVagaChat");
+        if (!btn) return;
+
+        btn.addEventListener("click", function() {
+            btn.disabled = true;
+            btn.textContent = "Enviando solicitação...";
+
+            const csrfToken = getCookie('csrftoken');
+
+            fetch(`/chat/${conversaId}/solicitar-vaga/`, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": csrfToken
+                }
+            })
+            .then(function(res) {
+                return res.json();
+            })
+            .then(function(resData) {
+                if (resData.sucesso) {
+                    const body = document.getElementById("solicitacaoChatBody");
+                    if (body) {
+                        body.innerHTML = `
+                            <div class="status-badge-pendente">
+                                ⏳ Solicitação enviada! Aguardando confirmação do motorista.
+                            </div>
+                        `;
+                    }
+                    atualizarMensagens();
+                } else {
+                    alert(resData.erro || "Erro ao solicitar vaga.");
+                    btn.disabled = false;
+                    btn.textContent = "🙋 Solicitar Vaga nesta Carona";
+                }
+            })
+            .catch(function(err) {
+                console.error(err);
+                alert("Erro de conexão ao solicitar vaga.");
+                btn.disabled = false;
+                btn.textContent = "🙋 Solicitar Vaga nesta Carona";
+            });
+        });
+    }
+
+    function vincularBotoesMotorista() {
+        const btnAceitar = document.getElementById("btnAceitarSolicitacao");
+        const btnRecusar = document.getElementById("btnRecusarSolicitacao");
+        const card = document.getElementById("cardSolicitacaoMotorista");
+
+        if (btnAceitar && card) {
+            btnAceitar.addEventListener("click", function() {
+                const solId = card.dataset.id;
+                responderSolicitacao(solId, "aceitar");
+            });
+        }
+
+        if (btnRecusar && card) {
+            btnRecusar.addEventListener("click", function() {
+                const solId = card.dataset.id;
+                responderSolicitacao(solId, "recusar");
+            });
+        }
+    }
+
+    function responderSolicitacao(solicitacaoId, acao) {
+        const csrfToken = getCookie('csrftoken');
+        const formData = new FormData();
+        formData.append("acao", acao);
+
+        fetch(`/chat/${conversaId}/responder-solicitacao/${solicitacaoId}/`, {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": csrfToken
+            },
+            body: formData
+        })
+        .then(function(res) {
+            return res.json();
+        })
+        .then(function(resData) {
+            if (resData.sucesso) {
+                atualizarMensagens();
+            } else {
+                alert(resData.erro || "Não foi possível processar a resposta.");
+            }
+        })
+        .catch(function(err) {
+            console.error(err);
+            alert("Erro de conexão.");
+        });
+    }
+
+    // Inicializa listeners nos botões presentes no carregamento da página
+    vincularBotaoSolicitarPassageiro();
+    vincularBotoesMotorista();
 
     chatForm.addEventListener(
         "submit",
@@ -629,10 +923,7 @@
             );
 
 
-            const csrfToken =
-                document.querySelector(
-                    "[name=csrfmiddlewaretoken]"
-                ).value;
+            const csrfToken = getCookie('csrftoken');
 
 
             fetch(
@@ -708,9 +999,6 @@
         }
     );
 
-    
-
-
     messageInput.addEventListener(
         "keydown",
         function(event) {
@@ -726,12 +1014,12 @@
         }
     );
 
-
     rolarParaBaixo();
     atualizarMensagens();
 
     // Polling de novas mensagens a cada 2 segundos
     setInterval(atualizarMensagens, 2000);
+
 </script>
 
 {% endif %}

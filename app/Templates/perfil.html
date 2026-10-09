@@ -21,6 +21,11 @@
             <a href="#" class="menu-item">Buscar Caronas</a>
             <a href="{% url 'chats' %}" class="menu-item">Mensagens</a>
             <a href="{% url 'avaliacoes' %}" class="menu-item">Avaliações</a>
+            {% if contexto_motorista %}
+                <a href="{% url 'criar_carona' %}" class="menu-item">Cadastrar Carona</a>
+            {% elif request.user.is_authenticated %}
+                <a href="{% url 'verificacao_cnh' %}" class="menu-item">Verificação de CNH</a>
+            {% endif %}
         </nav>
 
         <div class="sidebar-footer">
