@@ -25,6 +25,7 @@ from app.models import (
     Conversa,
     Mensagem,
     Avaliacao,
+    SolicitacaoCNH,
 )
 
 
@@ -446,105 +447,104 @@ class EditarCaronaView(
         )
 
 
-class VerificacaoCNHView(
-    LoginRequiredMixin,
-    View
-):
-
+class VerificacaoCNHView(LoginRequiredMixin, View):
     login_url = "/login/"
 
-    def get(
-        self,
-        request,
-        *args,
-        **kwargs
-    ):
+    def get(self, request, *args, **kwargs):
+        perfil = getattr(request.user, "perfil", None)
 
-        perfil = getattr(
-            request.user,
-            "perfil",
-            None
-        )
-
-        verificado = getattr(
-            perfil,
-            "is_verificado",
-            False
-        )
+        solicitacao = SolicitacaoCNH.objects.filter(
+            user=request.user,
+            status=SolicitacaoCNH.Status.PENDENTE
+        ).first()
 
         return render(
             request,
             "verificacao_cnh.html",
             {
-                "enviado": False,
-                "verificado": verificado
+                "enviado": solicitacao is not None,
+                "verificado": getattr(
+                    perfil, "is_verificado", False
+                ),
+                "solicitacao": solicitacao,
+                "nome": solicitacao.nome if solicitacao else "",
+                "sobrenome": (
+                    solicitacao.sobrenome if solicitacao else ""
+                ),
+                "usuario": (
+                    solicitacao.usuario_informado
+                    if solicitacao else request.user.username
+                ),
+                "email": (
+                    solicitacao.email_informado
+                    if solicitacao else request.user.email
+                ),
             }
         )
 
-    def post(
-        self,
-        request,
-        *args,
-        **kwargs
-    ):
+    def post(self, request, *args, **kwargs):
+        perfil = getattr(request.user, "perfil", None)
 
-        nome = request.POST.get(
-            "nome",
-            ""
-        ).strip()
-
-        sobrenome = request.POST.get(
-            "sobrenome",
-            ""
-        ).strip()
-
-        usuario = request.POST.get(
-            "usuario",
-            ""
-        ).strip()
-
-        email = request.POST.get(
-            "email",
-            ""
-        ).strip()
-
-        if not nome or not sobrenome or not usuario or not email:
-
+        if perfil and perfil.is_verificado:
             return render(
                 request,
                 "verificacao_cnh.html",
                 {
                     "enviado": False,
-                    "erro":
-                        "Preencha todos os campos."
+                    "verificado": True,
+                    "erro": "Sua conta já está verificada."
                 }
             )
 
-        perfil = getattr(
-            request.user,
-            "perfil",
-            None
-        )
+        nome = request.POST.get("nome", "").strip()
+        sobrenome = request.POST.get("sobrenome", "").strip()
+        usuario = request.POST.get("usuario", "").strip()
+        email = request.POST.get("email", "").strip()
 
-        verificado = getattr(
-            perfil,
-            "is_verificado",
-            False
-        )
+        if not all([nome, sobrenome, usuario, email]):
+            return render(
+                request,
+                "verificacao_cnh.html",
+                {
+                    "enviado": False,
+                    "verificado": False,
+                    "erro": "Preencha todos os campos.",
+                    "nome": nome,
+                    "sobrenome": sobrenome,
+                    "usuario": request.user.username,
+                    "email": request.user.email,
+                }
+            )
+
+        solicitacao_existente = SolicitacaoCNH.objects.filter(
+            user=request.user,
+            status=SolicitacaoCNH.Status.PENDENTE
+        ).first()
+
+        if solicitacao_existente:
+            solicitacao = solicitacao_existente
+        else:
+            solicitacao = SolicitacaoCNH.objects.create(
+                user=request.user,
+                nome=nome,
+                sobrenome=sobrenome,
+                usuario_informado=usuario,
+                email_informado=email,
+            )
 
         return render(
             request,
             "verificacao_cnh.html",
             {
                 "enviado": True,
-                "verificado": verificado,
-                "nome": nome,
-                "sobrenome": sobrenome,
-                "usuario": usuario,
-                "email": email
+                "verificado": False,
+                "solicitacao": solicitacao,
+                "nome": solicitacao.nome,
+                "sobrenome": solicitacao.sobrenome,
+                "usuario": solicitacao.usuario_informado,
+                "email": solicitacao.email_informado,
             }
         )
-
 
 class ChatView(
     LoginRequiredMixin,

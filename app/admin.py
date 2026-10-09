@@ -1,4 +1,8 @@
 from django.contrib import admin
+from django.contrib.auth.models import Group
+from django.utils import timezone
+from django.contrib import messages
+
 from .models import *
 
 
@@ -99,6 +103,80 @@ class PerfilUsuarioAdmin(admin.ModelAdmin):
     list_display = ("user", "is_verificado", "telefone")
     list_filter = ("is_verificado",)
     search_fields = ("user__username", "user__email")
+    
+@admin.register(SolicitacaoCNH)
+class SolicitacaoCNHAdmin(admin.ModelAdmin):
+    list_display = (
+        "user",
+        "nome",
+        "sobrenome",
+        "email_informado",
+        "status",
+        "data_solicitacao",
+        "data_decisao",
+    )
+
+    list_filter = ("status", "data_solicitacao")
+    search_fields = (
+        "user__username",
+        "nome",
+        "sobrenome",
+        "email_informado",
+    )
+
+    readonly_fields = ("data_solicitacao", "data_decisao")
+    actions = ("aprovar_solicitacoes", "rejeitar_solicitacoes")
+
+    @admin.action(description="Aprovar solicitações selecionadas")
+    def aprovar_solicitacoes(self, request, queryset):
+        grupo, _ = Group.objects.get_or_create(name="Motorista")
+        aprovadas = 0
+
+        for solicitacao in queryset:
+            if solicitacao.status == SolicitacaoCNH.Status.APROVADA:
+                continue
+
+            perfil, _ = PerfilUsuario.objects.get_or_create(
+                user=solicitacao.user
+            )
+            perfil.is_verificado = True
+            perfil.save(update_fields=["is_verificado"])
+
+            solicitacao.user.groups.add(grupo)
+
+            solicitacao.status = SolicitacaoCNH.Status.APROVADA
+            solicitacao.data_decisao = timezone.now()
+            solicitacao.save(
+                update_fields=["status", "data_decisao"]
+            )
+            aprovadas += 1
+
+        self.message_user(
+            request,
+            f"{aprovadas} solicitação(ões) aprovada(s).",
+            level=messages.SUCCESS,
+        )
+
+    @admin.action(description="Rejeitar solicitações selecionadas")
+    def rejeitar_solicitacoes(self, request, queryset):
+        rejeitadas = 0
+
+        for solicitacao in queryset:
+            if solicitacao.status == SolicitacaoCNH.Status.REJEITADA:
+                continue
+
+            solicitacao.status = SolicitacaoCNH.Status.REJEITADA
+            solicitacao.data_decisao = timezone.now()
+            solicitacao.save(
+                update_fields=["status", "data_decisao"]
+            )
+            rejeitadas += 1
+
+        self.message_user(
+            request,
+            f"{rejeitadas} solicitação(ões) rejeitada(s).",
+            level=messages.SUCCESS,
+        )
 
 
 admin.site.register(Destino, DestinoAdmin)

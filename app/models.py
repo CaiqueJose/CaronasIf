@@ -262,6 +262,54 @@ class PerfilUsuario(models.Model):
     def __str__(self):
         status = "Verificado" if self.is_verificado else "Não Verificado"
         return f"{self.user.username} - {status}"
+    
+    
+class SolicitacaoCNH(models.Model):
+    class Status(models.TextChoices):
+        PENDENTE = "pendente", "Pendente"
+        APROVADA = "aprovada", "Aprovada"
+        REJEITADA = "rejeitada", "Rejeitada"
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="solicitacoes_cnh",
+        verbose_name="Usuário"
+    )
+
+    nome = models.CharField(max_length=100, verbose_name="Nome")
+    sobrenome = models.CharField(max_length=100, verbose_name="Sobrenome")
+    usuario_informado = models.CharField(
+        max_length=150,
+        verbose_name="Usuário informado"
+    )
+    email_informado = models.EmailField(verbose_name="E-mail informado")
+
+    status = models.CharField(
+        max_length=10,
+        choices=Status.choices,
+        default=Status.PENDENTE,
+        verbose_name="Status"
+    )
+
+    data_solicitacao = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Data da solicitação"
+    )
+
+    data_decisao = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name="Data da decisão"
+    )
+
+    class Meta:
+        verbose_name = "Solicitação de CNH"
+        verbose_name_plural = "Solicitações de CNH"
+        ordering = ["-data_solicitacao"]
+
+    def __str__(self):
+        return f"{self.user.username} - {self.get_status_display()}"
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
