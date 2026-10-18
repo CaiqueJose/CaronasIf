@@ -200,6 +200,9 @@ class IndexView(
 
         caronas = (
             Carona.objects
+            .filter(
+                status=Carona.Status.ATIVA
+            )
             .select_related(
                 "motorista",
                 "origem",
@@ -385,15 +388,42 @@ class MinhasCaronasView(
                 "destino"
             )
             .order_by(
-                "data_hora"
+                "-data_hora"
             )
         )
+
+        # Viagens onde o usuário é passageiro
+        solicitacoes_como_passageiro = (
+            SolicitacaoCarona.objects
+            .filter(
+                passageiro=request.user
+            )
+            .select_related(
+                "carona__origem",
+                "carona__destino",
+                "carona__motorista"
+            )
+            .order_by(
+                "-criado_em"
+            )
+        )
+
+        # Mapeia avaliações já feitas pelo usuário
+        caronas_avaliadas_ids = set(
+            Avaliacao.objects
+            .filter(avaliador=request.user, carona__isnull=False)
+            .values_list("carona_id", flat=True)
+        )
+
+        for sol in solicitacoes_como_passageiro:
+            sol.ja_avaliou = sol.carona_id in caronas_avaliadas_ids
 
         return render(
             request,
             "carona.html",
             {
-                "caronas": caronas
+                "caronas": caronas,
+                "solicitacoes_passageiro": solicitacoes_como_passageiro,
             }
         )
 
@@ -507,7 +537,7 @@ class EditarCaronaView(
     ):
 
         carona = get_object_or_404(
-            Carona,
+            Carona.objects.select_related("origem", "destino"),
             pk=pk
         )
 
@@ -516,11 +546,16 @@ class EditarCaronaView(
                 "Você não pode editar esta carona."
             )
 
+        cidades = Cidade.objects.select_related("estado").all()
+        destinos = Destino.objects.all()
+
         return render(
             request,
             "editar_carona.html",
             {
-                "carona": carona
+                "carona": carona,
+                "cidades": cidades,
+                "destinos": destinos,
             }
         )
 
@@ -542,31 +577,164 @@ class EditarCaronaView(
                 "Você não pode editar esta carona."
             )
 
-        carona.origem_id = request.POST.get(
-            "origem"
-        )
+        origem = request.POST.get("origem")
+        destino = request.POST.get("destino")
+        data_hora = request.POST.get("data_hora")
+        valor = request.POST.get("valor")
+        vagas = request.POST.get("vagas")
 
-        carona.destino_id = request.POST.get(
-            "destino"
-        )
+        if not (origem and destino and data_hora and valor and vagas):
+            messages.error(request, "Por favor, preencha todos os campos obrigatórios.")
+            return render(
+                request,
+                "editar_carona.html",
+                {
+                    "carona": carona,
+                    "cidades": Cidade.objects.select_related("estado").all(),
+                    "destinos": Destino.objects.all(),
+                }
+            )
 
-        carona.data_hora = request.POST.get(
-            "data_hora"
-        )
-
-        carona.valor = request.POST.get(
-            "valor"
-        )
-
-        carona.vagas = request.POST.get(
-            "vagas"
-        )
-
+        carona.origem_id = origem
+        carona.destino_id = destino
+        carona.data_hora = data_hora
+        carona.valor = valor
+        carona.vagas = vagas
         carona.save()
+
+        messages.success(request, "Carona atualizada com sucesso!")
 
         return redirect(
             "minhas_caronas"
         )
+
+
+class EncerrarCaronaView(
+    LoginRequiredMixin,
+    View
+):
+    login_url = "/login/"
+
+    def post(
+        self,
+        request,
+        carona_id,
+        *args,
+        **kwargs
+    ):
+        carona = get_object_or_404(
+            Carona.objects.select_related("origem", "destino", "motorista"),
+            id=carona_id
+        )
+
+        if carona.motorista != request.user:
+            return HttpResponseForbidden(
+                "Apenas o motorista responsável pode encerrar esta carona."
+            )
+
+        if carona.status == Carona.Status.ENCERRADA:
+            messages.info(request, "Esta carona já foi encerrada anteriormente.")
+            return redirect("minhas_caronas")
+
+        carona.status = Carona.Status.ENCERRADA
+        carona.encerrada_em = timezone.now()
+        carona.save(update_fields=["status", "encerrada_em"])
+
+        # Notifica no chat da carona
+        conversas = Conversa.objects.filter(carona=carona)
+        for conversa in conversas:
+            Mensagem.objects.create(
+                conversa=conversa,
+                remetente=request.user,
+                texto="🏁 O motorista encerrou esta carona! Os passageiros confirmados agora podem avaliar a viagem."
+            )
+
+        messages.success(
+            request,
+            f"Carona #{carona.id} ({carona.origem.nome} -> {carona.destino.nome}) encerrada com sucesso! As avaliações foram liberadas para os passageiros."
+        )
+
+        next_url = request.POST.get("next") or request.META.get("HTTP_REFERER")
+        if next_url:
+            return redirect(next_url)
+        return redirect("minhas_caronas")
+
+
+class AvaliarCaronaView(
+    LoginRequiredMixin,
+    View
+):
+    login_url = "/login/"
+
+    def post(
+        self,
+        request,
+        carona_id,
+        *args,
+        **kwargs
+    ):
+        carona = get_object_or_404(
+            Carona.objects.select_related("motorista"),
+            id=carona_id
+        )
+
+        # Regra 1: Carona DEVE estar encerrada pelo motorista
+        if carona.status != Carona.Status.ENCERRADA:
+            messages.error(
+                request,
+                "A opção de avaliação só é liberada após a carona ser encerrada pelo motorista."
+            )
+            return redirect(request.META.get("HTTP_REFERER", "minhas_caronas"))
+
+        # Regra 2: Usuário não pode ser o próprio motorista
+        if request.user.id == carona.motorista_id:
+            messages.error(request, "Você não pode avaliar a sua própria carona.")
+            return redirect(request.META.get("HTTP_REFERER", "minhas_caronas"))
+
+        # Regra 3: O passageiro deve ter tido vaga ACEITA nesta carona
+        solicitacao_aceita = SolicitacaoCarona.objects.filter(
+            carona=carona,
+            passageiro=request.user,
+            status=SolicitacaoCarona.Status.ACEITA
+        ).exists()
+
+        if not solicitacao_aceita:
+            messages.error(
+                request,
+                "Apenas passageiros com vaga aceita nesta carona podem avaliá-la."
+            )
+            return redirect(request.META.get("HTTP_REFERER", "minhas_caronas"))
+
+        try:
+            nota = float(request.POST.get("nota", 5))
+            if nota < 1 or nota > 5:
+                messages.error(request, "A nota deve ser entre 1 e 5 estrelas.")
+                return redirect(request.META.get("HTTP_REFERER", "minhas_caronas"))
+        except (ValueError, TypeError):
+            messages.error(request, "Nota informada inválida.")
+            return redirect(request.META.get("HTTP_REFERER", "minhas_caronas"))
+
+        comentario = request.POST.get("comentario", "").strip()
+
+        avaliacao, created = Avaliacao.objects.update_or_create(
+            carona=carona,
+            avaliador=request.user,
+            motorista=carona.motorista,
+            defaults={
+                "nota": nota,
+                "comentario": comentario,
+            }
+        )
+
+        if created:
+            messages.success(request, f"Avaliação de {nota}★ registrada com sucesso! Obrigado pelo feedback.")
+        else:
+            messages.success(request, "Sua avaliação foi atualizada com sucesso!")
+
+        next_url = request.POST.get("next") or request.META.get("HTTP_REFERER")
+        if next_url:
+            return redirect(next_url)
+        return redirect("minhas_caronas")
 
 
 class VerificacaoCNHView(LoginRequiredMixin, View):
@@ -1336,6 +1504,24 @@ class PerfilView(
 
         return self.request.user
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Avaliações recebidas pelo usuário como motorista
+        avaliacoes = (
+            Avaliacao.objects
+            .filter(motorista=self.request.user)
+            .select_related("avaliador", "carona")
+            .order_by("-criado_em")
+        )
+
+        media_avaliacao = avaliacoes.aggregate(media=Avg("nota"))["media"]
+
+        context["avaliacoes_recebidas"] = avaliacoes
+        context["media_avaliacao"] = media_avaliacao
+
+        return context
+
     def post(
         self,
         request,
@@ -1455,6 +1641,8 @@ class PerfilMotoristaView(
             .filter(
                 motorista=motorista
             )
+            .select_related("avaliador")
+            .order_by("-criado_em")
         )
 
         media_avaliacao = (
@@ -1463,16 +1651,96 @@ class PerfilMotoristaView(
             )["media"]
         )
 
+        # Regra de negócio: só pode avaliar se participou de carona ACEITA e ENCERRADA pelo motorista
+        pode_avaliar = False
+        carona_para_avaliar = None
+        minha_avaliacao = None
+
+        if request.user.is_authenticated and request.user.id != motorista.id:
+            caronas_encerradas = Carona.objects.filter(
+                motorista=motorista,
+                status=Carona.Status.ENCERRADA,
+                solicitacoes__passageiro=request.user,
+                solicitacoes__status=SolicitacaoCarona.Status.ACEITA
+            ).distinct().order_by("-data_hora")
+
+            if caronas_encerradas.exists():
+                pode_avaliar = True
+                carona_para_avaliar = caronas_encerradas.first()
+                minha_avaliacao = Avaliacao.objects.filter(
+                    carona=carona_para_avaliar,
+                    avaliador=request.user
+                ).first()
+
         return render(
             request,
             "perfil_motorista.html",
             {
                 "motorista": motorista,
                 "avaliacoes": avaliacoes,
-                "media_avaliacao":
-                    media_avaliacao
+                "media_avaliacao": media_avaliacao,
+                "minha_avaliacao": minha_avaliacao,
+                "pode_avaliar": pode_avaliar,
+                "carona_para_avaliar": carona_para_avaliar,
             }
         )
+
+    def post(
+        self,
+        request,
+        motorista_id
+    ):
+        motorista = get_object_or_404(
+            User,
+            id=motorista_id
+        )
+
+        if request.user.id == motorista.id:
+            messages.error(request, "Você não pode avaliar a si mesmo.")
+            return redirect("perfil_motorista", motorista_id=motorista_id)
+
+        # Validação estrita: exige carona ENCERRADA pelo motorista com vaga confirmada
+        carona_encerrada = Carona.objects.filter(
+            motorista=motorista,
+            status=Carona.Status.ENCERRADA,
+            solicitacoes__passageiro=request.user,
+            solicitacoes__status=SolicitacaoCarona.Status.ACEITA
+        ).order_by("-data_hora").first()
+
+        if not carona_encerrada:
+            messages.error(
+                request,
+                "A opção de avaliação só fica disponível após o motorista encerrar a carona realizada."
+            )
+            return redirect("perfil_motorista", motorista_id=motorista_id)
+
+        try:
+            nota = float(request.POST.get("nota", 5))
+            if nota < 1 or nota > 5:
+                messages.error(request, "A nota deve ser entre 1 e 5 estrelas.")
+                return redirect("perfil_motorista", motorista_id=motorista_id)
+        except (ValueError, TypeError):
+            messages.error(request, "Nota informada inválida.")
+            return redirect("perfil_motorista", motorista_id=motorista_id)
+
+        comentario = request.POST.get("comentario", "").strip()
+
+        avaliacao, created = Avaliacao.objects.update_or_create(
+            carona=carona_encerrada,
+            avaliador=request.user,
+            motorista=motorista,
+            defaults={
+                "nota": nota,
+                "comentario": comentario,
+            }
+        )
+
+        if created:
+            messages.success(request, f"Avaliação de {nota}★ para {motorista.username} registrada com sucesso!")
+        else:
+            messages.success(request, f"Sua avaliação para {motorista.username} foi atualizada com sucesso!")
+
+        return redirect("perfil_motorista", motorista_id=motorista_id)
 
 
 class AvaliacaoView(

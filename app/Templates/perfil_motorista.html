@@ -1,39 +1,87 @@
 {% load static %}
-
 <!DOCTYPE html>
-
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-
-<title>Perfil de {{ motorista.username }} - Caronas IF</title>
-
-<link rel="stylesheet" href="{% static 'css/style.css' %}">
-
-
+    <title>Perfil de {{ motorista.username }} - Caronas IF</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=2">
+    <style>
+        .star-rating-selector {
+            display: inline-flex;
+            flex-direction: row-reverse;
+            justify-content: center;
+            gap: 8px;
+            font-size: 32px;
+            margin: 12px 0 18px;
+        }
+        .star-rating-selector input[type="radio"] {
+            display: none;
+        }
+        .star-rating-selector label {
+            cursor: pointer;
+            color: #d1d5db;
+            transition: color 0.15s ease, transform 0.15s ease;
+        }
+        .star-rating-selector label:hover,
+        .star-rating-selector label:hover ~ label,
+        .star-rating-selector input[type="radio"]:checked ~ label {
+            color: #f59e0b;
+            transform: scale(1.1);
+        }
+        .profile-actions-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            margin-top: 15px;
+        }
+        .btn-avaliar-motorista {
+            background-color: #f59e0b;
+            color: #ffffff;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background-color 0.2s;
+            text-decoration: none;
+        }
+        .btn-avaliar-motorista:hover {
+            background-color: #d97706;
+        }
+    </style>
 </head>
-
 <body>
 
-
 <header class="profile-header">
-
     <a href="{% url 'index' %}" class="back-button">
         ← Voltar
     </a>
-
     <h1>Perfil do Motorista</h1>
-
 </header>
-
 
 <main class="profile-page">
 
+    {% if messages %}
+        <div style="width: 100%; margin-bottom: 20px;">
+            {% for message in messages %}
+                <div class="alert {% if 'error' in message.tags or 'danger' in message.tags %}alert-danger{% else %}alert-success{% endif %}"
+                     style="padding: 14px 18px; border-radius: 8px; margin-bottom: 10px; font-size: 14px; font-weight: 500;
+                     {% if 'error' in message.tags or 'danger' in message.tags %}background-color: #fef2f2; color: #991b1b; border: 1px solid #fecaca;{% else %}background-color: #f0fdf4; color: #166534; border: 1px solid #bbf7d0;{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
     <!-- Informações do motorista -->
     <section class="profile-card">
-
         <div class="profile-avatar">
             {{ motorista.username|first|upper }}
         </div>
@@ -47,177 +95,210 @@
         </p>
 
         {% if motorista.perfil.is_verificado %}
-
             <span class="verified-badge">
                 ✓ Motorista verificado
             </span>
-
         {% else %}
-
             <span class="unverified-badge">
                 Motorista não verificado
             </span>
-
         {% endif %}
 
-
         <div class="profile-info">
-
             {% if motorista.perfil.telefone %}
-
                 <div class="profile-info-item">
-
-                    <span class="info-label">
-                        Telefone
-                    </span>
-
-                    <span class="info-value">
-                        {{ motorista.perfil.telefone }}
-                    </span>
-
+                    <span class="info-label">Telefone</span>
+                    <span class="info-value">{{ motorista.perfil.telefone }}</span>
                 </div>
-
             {% endif %}
 
-
             <div class="profile-info-item">
-
-                <span class="info-label">
-                    E-mail
-                </span>
-
-                <span class="info-value">
-                    {{ motorista.email }}
-                </span>
-
+                <span class="info-label">Membro desde</span>
+                <span class="info-value">{{ motorista.date_joined|date:"d/m/Y" }}</span>
             </div>
-
         </div>
 
-
-        <!-- Botão para iniciar conversa -->
+        <!-- Botões de Ação para Passageiros -->
         {% if user.is_authenticated and user.id != motorista.id %}
-
-            <div class="profile-chat-action">
-
+            <div class="profile-actions-container">
                 <a href="{% url 'iniciar_chat_motorista' motorista.id %}" class="chat-button">
                     💬 Conversar com motorista
                 </a>
 
+                {% if pode_avaliar %}
+                    <button type="button" class="btn-avaliar-motorista" onclick="openModalAvaliacao()">
+                        {% if minha_avaliacao %}
+                            ✏️ Alterar minha avaliação ({{ minha_avaliacao.nota }}★)
+                        {% else %}
+                            ⭐ Avaliar este Motorista
+                        {% endif %}
+                    </button>
+                {% endif %}
             </div>
-
         {% endif %}
-
     </section>
-
 
     <!-- Avaliação média -->
     <section class="rating-card">
-
-        <h2>
-            Avaliação do motorista
-        </h2>
+        <h2>Avaliação do motorista</h2>
 
         <div class="rating-main">
-
             {% if media_avaliacao %}
-
                 <div class="rating-number">
                     {{ media_avaliacao|floatformat:1 }}
                 </div>
-
                 <div class="rating-stars">
                     ⭐⭐⭐⭐⭐
                 </div>
-
-                <p>
-                    Média das avaliações
-                </p>
-
+                <p>Média calculada com base em {{ avaliacoes.count }} avaliação{{ avaliacoes.count|pluralize:"ões" }}</p>
             {% else %}
-
                 <div class="no-rating">
-
                     <span>⭐</span>
-
-                    <p>
-                        Este motorista ainda não possui avaliações.
-                    </p>
-
+                    <p>Este motorista ainda não possui avaliações.</p>
                 </div>
-
             {% endif %}
-
         </div>
-
     </section>
 
-
-    <!-- Avaliações -->
+    <!-- Avaliações dos passageiros -->
     <section class="reviews-card">
-
-        <h2>
-            Avaliações dos passageiros
-        </h2>
-
+        <h2>Avaliações dos passageiros ({{ avaliacoes.count }})</h2>
 
         {% for avaliacao in avaliacoes %}
-
             <article class="review-item">
-
                 <div class="review-header">
-
-                    <div class="review-rating">
-
-                        {% for estrela in "12345" %}
-
-                            {% if forloop.counter <= avaliacao.nota %}
-                                ⭐
+                    <div>
+                        <div style="font-weight: 600; font-size: 14px; color: #333;">
+                            {% if avaliacao.avaliador %}
+                                👤 {{ avaliacao.avaliador.first_name|default:avaliacao.avaliador.username }}
                             {% else %}
-                                ☆
+                                👤 Usuário Anônimo
                             {% endif %}
-
-                        {% endfor %}
-
+                        </div>
+                        <span style="font-size: 11px; color: #888;">
+                            📅 {{ avaliacao.criado_em|date:"d/m/Y H:i" }}
+                        </span>
                     </div>
 
-
-                    <strong>
-                        {{ avaliacao.nota }}/5
-                    </strong>
-
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <div class="review-rating">
+                            {% for estrela in "12345" %}
+                                {% if forloop.counter <= avaliacao.nota %}
+                                    ⭐
+                                {% else %}
+                                    ☆
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <strong>{{ avaliacao.nota|floatformat:1 }}/5</strong>
+                    </div>
                 </div>
 
-
                 {% if avaliacao.comentario %}
-
                     <p class="review-comment">
-                        {{ avaliacao.comentario }}
+                        "{{ avaliacao.comentario }}"
                     </p>
-
                 {% endif %}
-
             </article>
-
-
         {% empty %}
-
             <div class="empty-reviews">
-
                 <span>⭐</span>
-
-                <p>
-                    Nenhuma avaliação foi registrada para este motorista.
-                </p>
-
+                <p>Nenhuma avaliação foi registrada para este motorista.</p>
             </div>
-
         {% endfor %}
-
     </section>
 
 </main>
 
+<!-- MODAL DE AVALIAÇÃO DO MOTORISTA -->
+<div id="modal-avaliacao" class="modal-overlay">
+    <div class="modal-content" style="max-width: 480px;">
+        <div class="modal-header">
+            <h3>Avaliar {{ motorista.first_name|default:motorista.username }}</h3>
+            <button type="button" class="btn-close-modal" onclick="closeModalAvaliacao()">✕</button>
+        </div>
+
+        <form method="POST" action="{% url 'perfil_motorista' motorista.id %}" style="padding: 10px 0;">
+            {% csrf_token %}
+
+            <p style="font-size: 13px; color: #64748b; text-align: center; margin-bottom: 6px;">
+                Selecione a quantidade de estrelas para a experiência com este motorista:
+            </p>
+
+            <!-- Seletor Interativo de 1 a 5 estrelas -->
+            <div style="text-align: center;">
+                <div class="star-rating-selector">
+                    <input type="radio" id="star5" name="nota" value="5"
+                        {% if minha_avaliacao and minha_avaliacao.nota == 5 %}checked{% elif not minha_avaliacao %}checked{% endif %} required>
+                    <label for="star5" title="5 estrelas - Excelente">★</label>
+
+                    <input type="radio" id="star4" name="nota" value="4"
+                        {% if minha_avaliacao and minha_avaliacao.nota == 4 %}checked{% endif %}>
+                    <label for="star4" title="4 estrelas - Muito boa">★</label>
+
+                    <input type="radio" id="star3" name="nota" value="3"
+                        {% if minha_avaliacao and minha_avaliacao.nota == 3 %}checked{% endif %}>
+                    <label for="star3" title="3 estrelas - Regular">★</label>
+
+                    <input type="radio" id="star2" name="nota" value="2"
+                        {% if minha_avaliacao and minha_avaliacao.nota == 2 %}checked{% endif %}>
+                    <label for="star2" title="2 estrelas - Ruim">★</label>
+
+                    <input type="radio" id="star1" name="nota" value="1"
+                        {% if minha_avaliacao and minha_avaliacao.nota == 1 %}checked{% endif %}>
+                    <label for="star1" title="1 estrela - Péssima">★</label>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px;">
+                <label for="comentario" style="font-weight: 600; font-size: 13px; color: #334155;">
+                    Comentário (opcional):
+                </label>
+                <textarea id="comentario" name="comentario" rows="3" maxlength="500"
+                          placeholder="Conte como foi sua carona, pontualidade, convivência..."
+                          style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical; box-sizing: border-box;">{% if minha_avaliacao %}{{ minha_avaliacao.comentario }}{% endif %}</textarea>
+            </div>
+
+            <div class="modal-actions" style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn-cancel-modal" onclick="closeModalAvaliacao()">
+                    Cancelar
+                </button>
+                <button type="submit" class="btn-primary" style="margin-top: 0; width: auto; background-color: #2e7d32;">
+                    {% if minha_avaliacao %}Atualizar Avaliação{% else %}Enviar Avaliação{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openModalAvaliacao() {
+        const modal = document.getElementById('modal-avaliacao');
+        if (modal) {
+            modal.classList.add('active');
+        }
+    }
+
+    function closeModalAvaliacao() {
+        const modal = document.getElementById('modal-avaliacao');
+        if (modal) {
+            modal.classList.remove('active');
+        }
+    }
+
+    window.addEventListener('click', function(event) {
+        const modal = document.getElementById('modal-avaliacao');
+        if (event.target === modal) {
+            closeModalAvaliacao();
+        }
+    });
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeModalAvaliacao();
+        }
+    });
+</script>
 
 </body>
 </html>

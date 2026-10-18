@@ -511,6 +511,10 @@ h3.driver-name a:hover {
     align-items: center;
 }
 
+.modal-overlay.active {
+    display: flex;
+}
+
 .modal-content {
     background-color: #fff;
     border-radius: 10px;

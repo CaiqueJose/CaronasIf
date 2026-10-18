@@ -1,5 +1,4 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -7,294 +6,415 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minhas Caronas - Caronas IF</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        .badge-status-ativa {
+            display: inline-block;
+            background-color: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-status-encerrada {
+            display: inline-block;
+            background-color: #f1f5f9;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-status-aceita {
+            display: inline-block;
+            background-color: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-status-pendente {
+            display: inline-block;
+            background-color: #fffbeb;
+            color: #92400e;
+            border: 1px solid #fde68a;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-status-recusada {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .star-rating-selector {
+            display: inline-flex;
+            flex-direction: row-reverse;
+            justify-content: center;
+            gap: 8px;
+            font-size: 32px;
+            margin: 12px 0 18px;
+        }
+        .star-rating-selector input[type="radio"] {
+            display: none;
+        }
+        .star-rating-selector label {
+            cursor: pointer;
+            color: #d1d5db;
+            transition: color 0.15s ease, transform 0.15s ease;
+        }
+        .star-rating-selector label:hover,
+        .star-rating-selector label:hover ~ label,
+        .star-rating-selector input[type="radio"]:checked ~ label {
+            color: #f59e0b;
+            transform: scale(1.1);
+        }
+    </style>
 </head>
 
 <body>
 
 <div class="app-container">
 
+    <!-- SIDEBAR -->
     <aside class="sidebar">
-
         <div class="sidebar-brand">
             <h2>Caronas IF</h2>
         </div>
 
         <nav class="sidebar-menu">
-
-            <a href="{% url 'index' %}" class="menu-item">
-                Início
-            </a>
-
-            <a href="{% url 'minhas_caronas' %}" class="menu-item active">
-                Minhas Caronas
-            </a>
-
-            <a href="{% url 'chats' %}" class="menu-item">
-                Mensagens
-            </a>
-
+            <a href="{% url 'index' %}" class="menu-item">Início</a>
+            <a href="{% url 'minhas_caronas' %}" class="menu-item active">Minhas Caronas</a>
+            <a href="{% url 'chats' %}" class="menu-item">Mensagens</a>
+            <a href="{% url 'avaliacoes' %}" class="menu-item">Avaliações</a>
             {% if contexto_motorista %}
-                <a href="{% url 'criar_carona' %}" class="menu-item">
-                    Cadastrar Carona
-                </a>
+                <a href="{% url 'criar_carona' %}" class="menu-item">Cadastrar Carona</a>
             {% elif request.user.is_authenticated %}
-                <a href="{% url 'verificacao_cnh' %}" class="menu-item">
-                    Verificação de CNH
-                </a>
+                <a href="{% url 'verificacao_cnh' %}" class="menu-item">Verificação de CNH</a>
             {% endif %}
-
         </nav>
 
         <div class="sidebar-footer">
-
             {% if request.user.is_staff or request.user.is_superuser %}
-                <a href="{% url 'gerenciar_solicitacoes_cnh' %}"
-                class="menu-item">
+                <a href="{% url 'gerenciar_solicitacoes_cnh' %}" class="menu-item">
                     Aprovar Motoristas
                 </a>
             {% endif %}
 
             {% if request.user.is_staff %}
-
-                <a href="{% url 'admin:index' %}"
-                   class="menu-item"
-                   target="_blank">
-
+                <a href="{% url 'admin:index' %}" class="menu-item" target="_blank">
                     Administração
-
                 </a>
-
             {% endif %}
 
-            <form action="{% url 'logout' %}"
-                  method="post"
-                  class="logout-form">
-
+            <form action="{% url 'logout' %}" method="post" class="logout-form">
                 {% csrf_token %}
-
-                <button type="submit"
-                        class="menu-item btn-logout">
-
+                <button type="submit" class="menu-item btn-logout">
                     Sair
-
                 </button>
-
             </form>
-
         </div>
-
     </aside>
 
-
     <div class="main-wrapper">
-
         <header class="top-header">
-
             <div></div>
-
             <div class="user-profile">
-
-                <a href="{% url 'chats' %}"
-                   class="navbar-messages"
-                   title="Mensagens"
-                   aria-label="Mensagens">
-
-                    <svg class="message-icon"
-                         viewBox="0 0 24 24"
-                         aria-hidden="true">
-
-                        <path
-                            d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5
-                               c-1.1 0-2.15-.24-3.1-.67
-                               L4 20l1.67-4.02
-                               A7.47 7.47 0 0 1 5 11.5
-                               a7.5 7.5 0 1 1 15 0Z"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                            stroke-linecap="round"
-                            stroke-linejoin="round">
-                        </path>
-
+                <a href="{% url 'chats' %}" class="navbar-messages" title="Mensagens" aria-label="Mensagens">
+                    <svg class="message-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5 c-1.1 0-2.15-.24-3.1-.67 L4 20l1.67-4.02 A7.47 7.47 0 0 1 5 11.5 a7.5 7.5 0 1 1 15 0Z"
+                              fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
                     </svg>
-
-                    {% if conversas_com_mensagens_novas > 0 %}
-
-                        <span class="message-notification">
-                            {{ conversas_com_mensagens_novas }}
-                        </span>
-
-                    {% endif %}
-
                 </a>
-
-
-                <a href="{% url 'perfil' %}"
-                   class="menu-item"
-                   style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600;">
-
+                <a href="{% url 'perfil' %}" class="menu-item" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600;">
                     👤 {{ request.user.username }}
-
                 </a>
-
             </div>
-
         </header>
 
-
         <main class="dashboard-content">
-
             <section class="feed-section">
 
+                <!-- BANNER -->
                 <div class="welcome-banner">
-
-                    <h3 class="greeting">
-                        Minhas Caronas
-                    </h3>
-
-                    <h1>
-                        Gerencie as caronas que você oferece
-                    </h1>
-
-                    <p class="subtitle">
-                        Consulte, edite e crie novas caronas pelo sistema.
-                    </p>
-
+                    <h3 class="greeting">Minhas Caronas</h3>
+                    <h1>Gerencie suas viagens e caronas</h1>
+                    <p class="subtitle">Acompanhe as caronas que você oferece como motorista e as viagens que participa como passageiro.</p>
                 </div>
 
-
-                <div class="section-header">
-
-                    <h2>
-                        Suas caronas oferecidas
-                    </h2>
-
-                </div>
-
-
-                {% if contexto_motorista %}
-
+                <!-- MENSAGENS DO DJANGO -->
+                {% if messages %}
                     <div style="margin-bottom: 20px;">
-
-                        <a href="{% url 'criar_carona' %}"
-                           class="btn-primary">
-
-                            + Criar uma carona
-
-                        </a>
-
+                        {% for message in messages %}
+                            <div class="alert {% if 'error' in message.tags or 'danger' in message.tags %}alert-danger{% elif 'success' in message.tags %}alert-success{% else %}alert-info{% endif %}"
+                                 style="padding: 12px 18px; border-radius: 8px; margin-bottom: 10px; font-size: 14px;
+                                 {% if 'error' in message.tags or 'danger' in message.tags %}background-color: #fef2f2; color: #991b1b; border: 1px solid #fecaca;{% elif 'success' in message.tags %}background-color: #f0fdf4; color: #166534; border: 1px solid #bbf7d0;{% else %}background-color: #f0f9ff; color: #075985; border: 1px solid #bae6fd;{% endif %}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
                     </div>
-
-                {% else %}
-
-                    <div class="welcome-banner"
-                         style="background-color: #fff8e1;">
-
-                        <h3>
-                            Verificação de motorista pendente
-                        </h3>
-
-                        <p>
-                            Para oferecer caronas, é necessário verificar sua CNH.
-                        </p>
-
-                        <a href="{% url 'verificacao_cnh' %}"
-                           class="btn-primary">
-
-                            Verificar CNH
-
-                        </a>
-
-                    </div>
-
                 {% endif %}
 
+                <!-- SEÇÃO 1: CARONAS OFERECIDAS (MOTORISTA) -->
+                {% if contexto_motorista %}
+                    <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                        <h2>🚗 Caronas que você oferece (Motorista)</h2>
+                        <a href="{% url 'criar_carona' %}" class="btn-primary" style="padding: 8px 16px; font-size: 13px;">
+                            + Criar uma carona
+                        </a>
+                    </div>
+
+                    <div class="caronas-list" style="margin-bottom: 40px;">
+                        {% for carona in caronas %}
+                            <div class="carona-card" style="border-left: 4px solid {% if carona.status == 'ativa' %}#2e7d32{% else %}#94a3b8{% endif %};">
+                                <div class="route-info">
+                                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                                        <h3 style="margin: 0;">
+                                            {{ carona.origem }} ➔ {{ carona.destino }}
+                                        </h3>
+                                        {% if carona.status == 'ativa' %}
+                                            <span class="badge-status-ativa">🟢 Ativa</span>
+                                        {% else %}
+                                            <span class="badge-status-encerrada">🏁 Encerrada</span>
+                                        {% endif %}
+                                    </div>
+
+                                    <p class="schedule">
+                                        📅 {{ carona.data_hora|date:"d/m/Y - H:i" }}
+                                    </p>
+
+                                    {% if carona.status == 'ativa' %}
+                                        <p class="spots">
+                                            👥 {{ carona.vagas }} vaga{{ carona.vagas|pluralize:"s" }} restante{{ carona.vagas|pluralize:"s" }}
+                                        </p>
+                                    {% else %}
+                                        <p class="spots" style="color: #64748b;">
+                                            🏁 Encerrada em {{ carona.encerrada_em|date:"d/m/Y \à\s H:i"|default:"Data concluída" }}
+                                        </p>
+                                    {% endif %}
+                                </div>
+
+                                <div class="price-action" style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+                                    <div>
+                                        <span class="amount">R$ {{ carona.valor }}</span>
+                                        <span class="per-seat">por assento</span>
+                                    </div>
+
+                                    <div style="display: flex; gap: 8px;">
+                                        {% if carona.status == 'ativa' %}
+                                            <a href="{% url 'editar_carona' carona.pk %}" class="btn-primary-sm">
+                                                Editar
+                                            </a>
+                                            <form method="post" action="{% url 'encerrar_carona' carona.pk %}" style="display: inline;"
+                                                  onsubmit="return confirm('Deseja realmente encerrar esta carona? As vagas restantes serão fechadas e os passageiros poderão avaliar a viagem.');">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn-primary-sm" style="background-color: #dc2626; border-color: #dc2626; cursor: pointer;">
+                                                    🏁 Encerrar Carona
+                                                </button>
+                                            </form>
+                                        {% else %}
+                                            <span style="font-size: 13px; color: #64748b; font-weight: 600;">
+                                                Viagem Finalizada
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="empty-state">
+                                <p>Você ainda não ofereceu nenhuma carona.</p>
+                                <a href="{% url 'criar_carona' %}" class="btn-primary">
+                                    + Criar uma carona
+                                </a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- SEÇÃO 2: VIAGENS COMO PASSAGEIRO -->
+                <div class="section-header" style="margin-top: 20px;">
+                    <h2>🎒 Caronas em que você é passageiro</h2>
+                </div>
 
                 <div class="caronas-list">
-
-                    {% for carona in caronas %}
-
-                        <div class="carona-card">
-
+                    {% for sol in solicitacoes_passageiro %}
+                        <div class="carona-card" style="border-left: 4px solid {% if sol.status == 'aceita' and sol.carona.status == 'encerrada' %}#f59e0b{% elif sol.status == 'aceita' %}#2e7d32{% elif sol.status == 'recusada' %}#dc2626{% else %}#e2e8f0{% endif %};">
                             <div class="route-info">
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                                    <h3 style="margin: 0;">
+                                        {{ sol.carona.origem }} ➔ {{ sol.carona.destino }}
+                                    </h3>
 
-                                <h3>
-                                    {{ carona.origem }} ➔ {{ carona.destino }}
-                                </h3>
+                                    {% if sol.status == 'aceita' %}
+                                        {% if sol.carona.status == 'encerrada' %}
+                                            <span class="badge-status-encerrada">🏁 Carona Encerrada</span>
+                                        {% else %}
+                                            <span class="badge-status-aceita">✅ Vaga Confirmada</span>
+                                        {% endif %}
+                                    {% elif sol.status == 'pendente' %}
+                                        <span class="badge-status-pendente">⏳ Solicitação Pendente</span>
+                                    {% elif sol.status == 'recusada' %}
+                                        <span class="badge-status-recusada">❌ Vaga Recusada</span>
+                                    {% endif %}
+                                </div>
 
                                 <p class="schedule">
-                                    📅 {{ carona.data_hora|date:"d/m/Y - H:i" }}
+                                    📅 {{ sol.carona.data_hora|date:"d/m/Y - H:i" }}
                                 </p>
 
-                                <p class="spots">
-                                    👥 {{ carona.vagas }} vagas disponíveis
+                                <p style="font-size: 13px; color: #475569; margin: 4px 0;">
+                                    👤 <strong>Motorista:</strong>
+                                    <a href="{% url 'perfil_motorista' sol.carona.motorista.id %}" style="color: #2e7d32; text-decoration: none; font-weight: 600;">
+                                        {{ sol.carona.motorista.first_name|default:sol.carona.motorista.username }}
+                                    </a>
                                 </p>
 
+                                {% if sol.status == 'aceita' and sol.carona.status == 'ativa' %}
+                                    <p style="font-size: 12px; color: #64748b; margin-top: 4px;">
+                                        ℹ️ A avaliação será liberada assim que o motorista encerrar esta carona.
+                                    </p>
+                                {% endif %}
                             </div>
 
+                            <div class="price-action" style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+                                <div>
+                                    <span class="amount">R$ {{ sol.carona.valor }}</span>
+                                    <span class="per-seat">por assento</span>
+                                </div>
 
-                            <div class="price-action">
-
-                                <span class="amount">
-                                    R$ {{ carona.valor }}
-                                </span>
-
-                                <span class="per-seat">
-                                    por assento
-                                </span>
-
-                                <a href="{% url 'editar_carona' carona.pk %}"
-                                   class="btn-primary-sm">
-
-                                    Editar
-
-                                </a>
-
+                                <div>
+                                    {% if sol.status == 'aceita' and sol.carona.status == 'encerrada' %}
+                                        {% if sol.ja_avaliou %}
+                                            <span style="font-size: 13px; color: #2e7d32; font-weight: 600;">
+                                                ✅ Carona avaliada!
+                                            </span>
+                                        {% else %}
+                                            <button type="button" class="btn-primary-sm" style="background-color: #f59e0b; border-color: #f59e0b; cursor: pointer;"
+                                                    onclick="abrirModalAvaliarCarona('{{ sol.carona.id }}', '{{ sol.carona.motorista.username }}', '{{ sol.carona.origem }} ➔ {{ sol.carona.destino }}')">
+                                                ⭐ Avaliar Motorista
+                                            </button>
+                                        {% endif %}
+                                    {% elif sol.conversa %}
+                                        <a href="{% url 'abrir_chat' sol.conversa.id %}" class="btn-primary-sm" style="background-color: #0284c7; border-color: #0284c7;">
+                                            💬 Abrir Chat
+                                        </a>
+                                    {% endif %}
+                                </div>
                             </div>
-
                         </div>
-
                     {% empty %}
-
                         <div class="empty-state">
-
-                            <p>
-                                Você ainda não ofereceu nenhuma carona.
-                            </p>
-
-                            {% if contexto_motorista %}
-
-                                <a href="{% url 'criar_carona' %}"
-                                   class="btn-primary">
-
-                                    + Criar uma carona
-
-                                </a>
-
-                            {% else %}
-
-                                <a href="{% url 'verificacao_cnh' %}"
-                                   class="btn-primary">
-
-                                    Verificar CNH
-
-                                </a>
-
-                            {% endif %}
-
+                            <p>Você ainda não participou de nenhuma carona como passageiro.</p>
+                            <a href="{% url 'index' %}" class="btn-primary">
+                                Buscar Caronas
+                            </a>
                         </div>
-
                     {% endfor %}
-
                 </div>
 
             </section>
-
         </main>
-
     </div>
 
 </div>
+
+<!-- MODAL DE AVALIAÇÃO DA CARONA ENCERRADA -->
+<div id="modal-avaliar-carona" class="modal-overlay">
+    <div class="modal-content" style="max-width: 480px;">
+        <div class="modal-header">
+            <h3 id="modalAvaliarTitulo">Avaliar Motorista</h3>
+            <button type="button" class="btn-close-modal" onclick="fecharModalAvaliarCarona()">✕</button>
+        </div>
+
+        <form id="formAvaliarCarona" method="POST" action="" style="padding: 10px 0;">
+            {% csrf_token %}
+
+            <p id="modalAvaliarSubtitulo" style="font-size: 13px; color: #64748b; text-align: center; margin-bottom: 6px;">
+                Como foi sua viagem com este motorista?
+            </p>
+
+            <!-- Seletor de 1 a 5 estrelas -->
+            <div style="text-align: center;">
+                <div class="star-rating-selector">
+                    <input type="radio" id="mstar5" name="nota" value="5" checked required>
+                    <label for="mstar5" title="5 estrelas - Excelente">★</label>
+
+                    <input type="radio" id="mstar4" name="nota" value="4">
+                    <label for="mstar4" title="4 estrelas - Muito boa">★</label>
+
+                    <input type="radio" id="mstar3" name="nota" value="3">
+                    <label for="mstar3" title="3 estrelas - Regular">★</label>
+
+                    <input type="radio" id="mstar2" name="nota" value="2">
+                    <label for="mstar2" title="2 estrelas - Ruim">★</label>
+
+                    <input type="radio" id="mstar1" name="nota" value="1">
+                    <label for="mstar1" title="1 estrela - Péssima">★</label>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px;">
+                <label for="mComentario" style="font-weight: 600; font-size: 13px; color: #334155;">
+                    Comentário (opcional):
+                </label>
+                <textarea id="mComentario" name="comentario" rows="3" maxlength="500"
+                          placeholder="Conte sua experiência com este motorista..."
+                          style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical; box-sizing: border-box;"></textarea>
+            </div>
+
+            <div class="modal-actions" style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn-cancel-modal" onclick="fecharModalAvaliarCarona()">
+                    Cancelar
+                </button>
+                <button type="submit" class="btn-primary" style="margin-top: 0; width: auto; background-color: #2e7d32;">
+                    Enviar Avaliação
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function abrirModalAvaliarCarona(caronaId, motoristaNome, trajeto) {
+        const modal = document.getElementById('modal-avaliar-carona');
+        const form = document.getElementById('formAvaliarCarona');
+        const titulo = document.getElementById('modalAvaliarTitulo');
+        const subtitulo = document.getElementById('modalAvaliarSubtitulo');
+
+        if (modal && form) {
+            form.action = `/caronas/${caronaId}/avaliar/`;
+            if (titulo) titulo.innerText = `Avaliar ${motoristaNome}`;
+            if (subtitulo) subtitulo.innerText = `Carona: ${trajeto}`;
+            modal.classList.add('active');
+        }
+    }
+
+    function fecharModalAvaliarCarona() {
+        const modal = document.getElementById('modal-avaliar-carona');
+        if (modal) {
+            modal.classList.remove('active');
+        }
+    }
+
+    window.addEventListener('click', function(event) {
+        const modal = document.getElementById('modal-avaliar-carona');
+        if (event.target === modal) fecharModalAvaliarCarona();
+    });
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') fecharModalAvaliarCarona();
+    });
+</script>
 
 </body>
 </html>

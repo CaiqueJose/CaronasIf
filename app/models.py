@@ -74,6 +74,11 @@ class Cidade(models.Model):
 
 
 class Carona(models.Model):
+    class Status(models.TextChoices):
+        ATIVA = "ativa", "Ativa"
+        ENCERRADA = "encerrada", "Encerrada"
+        CANCELADA = "cancelada", "Cancelada"
+
     motorista = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -100,7 +105,7 @@ class Carona(models.Model):
     )
 
     valor = models.DecimalField(
-        max_digits=6,
+        max_digits=8,
         decimal_places=2,
         verbose_name="Valor da Carona"
     )
@@ -108,6 +113,19 @@ class Carona(models.Model):
     vagas = models.PositiveIntegerField(
         validators=[MinValueValidator(1)],
         verbose_name="Vagas Disponíveis"
+    )
+
+    status = models.CharField(
+        max_length=15,
+        choices=Status.choices,
+        default=Status.ATIVA,
+        verbose_name="Status da Carona"
+    )
+
+    encerrada_em = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Encerrada em"
     )
 
     class Meta:
@@ -120,6 +138,9 @@ class Carona(models.Model):
             f"{self.origem} -> {self.destino} "
             f"({self.data_hora.strftime('%d/%m/%Y %H:%M')})"
         )
+
+    def is_encerrada(self):
+        return self.status == self.Status.ENCERRADA
 
 
 class Conversa(models.Model):
@@ -190,6 +211,15 @@ class Mensagem(models.Model):
 
 
 class Avaliacao(models.Model):
+    carona = models.ForeignKey(
+        Carona,
+        on_delete=models.CASCADE,
+        related_name="avaliacoes",
+        verbose_name="Carona",
+        null=True,
+        blank=True
+    )
+
     avaliador = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -210,7 +240,7 @@ class Avaliacao(models.Model):
         decimal_places=1,
         verbose_name="Nota da Avaliação",
         validators=[
-            MinValueValidator(0.0),
+            MinValueValidator(1.0),
             MaxValueValidator(5.0)
         ]
     )
@@ -229,6 +259,14 @@ class Avaliacao(models.Model):
     class Meta:
         verbose_name = "Avaliação"
         verbose_name_plural = "Avaliações"
+        ordering = ["-criado_em"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["carona", "avaliador", "motorista"],
+                condition=models.Q(carona__isnull=False),
+                name="unica_avaliacao_por_carona_usuario"
+            )
+        ]
 
     def __str__(self):
         return f"Nota {self.nota} para {self.motorista.username}"

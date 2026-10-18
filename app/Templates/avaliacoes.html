@@ -1,0 +1,160 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avaliações - Caronas IF</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+<div class="app-container">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <h2>Caronas IF</h2>
+        </div>
+
+        <nav class="sidebar-menu">
+            <a href="{% url 'index' %}" class="menu-item">Início</a>
+            <a href="{% url 'minhas_caronas' %}" class="menu-item">Minhas Caronas</a>
+            <a href="{% url 'chats' %}" class="menu-item">Mensagens</a>
+            <a href="{% url 'avaliacoes' %}" class="menu-item active">Avaliações</a>
+            {% if contexto_motorista %}
+                <a href="{% url 'criar_carona' %}" class="menu-item">Cadastrar Carona</a>
+            {% elif request.user.is_authenticated %}
+                <a href="{% url 'verificacao_cnh' %}" class="menu-item">Verificação de CNH</a>
+            {% endif %}
+        </nav>
+
+        <div class="sidebar-footer">
+            {% if request.user.is_staff or request.user.is_superuser %}
+                <a href="{% url 'gerenciar_solicitacoes_cnh' %}" class="menu-item">
+                    Aprovar Motoristas
+                </a>
+            {% endif %}
+
+            {% if request.user.is_staff %}
+                <a href="{% url 'admin:index' %}" class="menu-item" target="_blank">
+                    Administração
+                </a>
+            {% endif %}
+
+            <form action="{% url 'logout' %}" method="post" class="logout-form">
+                {% csrf_token %}
+                <button type="submit" class="menu-item btn-logout">
+                    Sair
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <div class="main-wrapper">
+        <header class="top-header">
+            <div></div>
+            <div class="user-profile">
+                <a href="{% url 'chats' %}" class="navbar-messages" title="Mensagens" aria-label="Mensagens">
+                    <svg class="message-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5 c-1.1 0-2.15-.24-3.1-.67 L4 20l1.67-4.02 A7.47 7.47 0 0 1 5 11.5 a7.5 7.5 0 1 1 15 0Z"
+                              fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                </a>
+                <a href="{% url 'perfil' %}" class="menu-item" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600;">
+                    👤 {{ request.user.username }}
+                </a>
+            </div>
+        </header>
+
+        <main class="dashboard-content">
+            <section class="feed-section">
+
+                <!-- BANNER DE BOAS-VINDAS -->
+                <div class="welcome-banner">
+                    <h3 class="greeting">Comunidade Caronas IF</h3>
+                    <h1>Avaliações Recentes</h1>
+                    <p class="subtitle">Confira os feedbacks e avaliações registrados sobre as viagens e motoristas.</p>
+                </div>
+
+                <!-- LISTAGEM DE AVALIAÇÕES -->
+                <div class="reviews-card" style="margin-top: 20px;">
+                    <h2>Todas as avaliações registradas ({{ avaliacoes.count }})</h2>
+
+                    {% for avaliacao in avaliacoes %}
+                        <article class="review-item" style="padding: 18px 0;">
+                            <div class="review-header" style="flex-wrap: wrap; gap: 10px;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div class="avatar-placeholder" style="width: 42px; height: 42px; font-size: 18px; border-radius: 50%; background-color: #2e7d32; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                                        {% if avaliacao.avaliador %}
+                                            {{ avaliacao.avaliador.username|first|upper }}
+                                        {% else %}
+                                            ?
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 600; color: #222; font-size: 15px;">
+                                            {% if avaliacao.avaliador %}
+                                                {{ avaliacao.avaliador.first_name|default:avaliacao.avaliador.username }}
+                                            {% else %}
+                                                Usuário Anônimo
+                                            {% endif %}
+                                            <span style="font-weight: 400; color: #777; font-size: 13px;">avaliou</span>
+                                            <a href="{% url 'perfil_motorista' avaliacao.motorista.id %}" style="color: #2e7d32; text-decoration: none; font-weight: 600;">
+                                                {{ avaliacao.motorista.first_name|default:avaliacao.motorista.username }}
+                                            </a>
+                                        </div>
+                                        <span style="font-size: 12px; color: #888;">
+                                            📅 {{ avaliacao.criado_em|date:"d/m/Y \à\s H:i" }}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div class="review-rating" style="font-size: 16px;">
+                                        {% for estrela in "12345" %}
+                                            {% if forloop.counter <= avaliacao.nota %}
+                                                ⭐
+                                            {% else %}
+                                                ☆
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    <strong style="color: #2e7d32; font-size: 14px;">
+                                        {{ avaliacao.nota|floatformat:1 }}/5
+                                    </strong>
+                                </div>
+                            </div>
+
+                            {% if avaliacao.comentario %}
+                                <p class="review-comment" style="margin-top: 12px; font-size: 14px; color: #444; background: #f8fafc; padding: 12px 16px; border-radius: 8px; border-left: 3px solid #2e7d32;">
+                                    "{{ avaliacao.comentario }}"
+                                </p>
+                            {% endif %}
+                        </article>
+
+                    {% empty %}
+                        <div class="empty-reviews" style="padding: 40px 20px; text-align: center;">
+                            <span style="font-size: 40px; display: block; margin-bottom: 12px;">⭐</span>
+                            <h3 style="color: #444; margin-bottom: 6px;">Nenhuma avaliação registrada ainda</h3>
+                            <p style="color: #777; font-size: 14px;">
+                                Assim que os passageiros realizarem e avaliarem suas caronas, os feedbacks aparecerão aqui!
+                            </p>
+                            <div style="margin-top: 20px;">
+                                <a href="{% url 'index' %}" class="btn-primary-sm" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; height: 38px;">
+                                    Ver Caronas Disponíveis
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+            </section>
+        </main>
+    </div>
+
+</div>
+
+</body>
+</html>

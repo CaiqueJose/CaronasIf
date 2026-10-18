@@ -320,19 +320,40 @@
 
                 {% if conversa.carona %}
                     <div class="solicitacao-chat-wrapper" id="solicitacaoCaronaWrapper">
-                        <div class="solicitacao-chat-header">
+                        <div class="solicitacao-chat-header" style="flex-wrap: wrap; gap: 8px;">
                             <span class="solicitacao-chat-title">
                                 🚗 Carona: {{ conversa.carona.origem }} ➔ {{ conversa.carona.destino }} (R$ {{ conversa.carona.valor }})
                             </span>
-                            <span class="solicitacao-chat-vagas" id="solicitacaoVagasInfo">
-                                {{ conversa.carona.vagas }} vaga{{ conversa.carona.vagas|pluralize:"s" }} restante{{ conversa.carona.vagas|pluralize:"s" }}
-                            </span>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
+                                {% if conversa.carona.status == 'encerrada' %}
+                                    <span style="background: #e2e8f0; color: #475569; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">
+                                        🏁 Carona Encerrada
+                                    </span>
+                                {% else %}
+                                    <span class="solicitacao-chat-vagas" id="solicitacaoVagasInfo">
+                                        {{ conversa.carona.vagas }} vaga{{ conversa.carona.vagas|pluralize:"s" }} restante{{ conversa.carona.vagas|pluralize:"s" }}
+                                    </span>
+                                    {% if eh_motorista %}
+                                        <form method="post" action="{% url 'encerrar_carona' conversa.carona.id %}" style="display: inline;"
+                                              onsubmit="return confirm('Deseja encerrar esta carona? As vagas restantes serão fechadas e os passageiros poderão avaliar a viagem.');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn-primary-sm" style="background-color: #dc2626; border-color: #dc2626; padding: 4px 10px; font-size: 12px; cursor: pointer;">
+                                                🏁 Encerrar Carona
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
                         </div>
 
                         <div class="solicitacao-chat-body" id="solicitacaoChatBody">
                             {% if eh_passageiro %}
                                 {% if not solicitacao %}
-                                    {% if conversa.carona.vagas > 0 %}
+                                    {% if conversa.carona.status == "encerrada" %}
+                                        <div class="status-badge-recusada">
+                                            🏁 Esta carona já foi encerrada pelo motorista.
+                                        </div>
+                                    {% elif conversa.carona.vagas > 0 %}
                                         <button type="button" class="btn-solicitar-chat" id="btnSolicitarVagaChat">
                                             🙋 Solicitar Vaga nesta Carona
                                         </button>
@@ -346,9 +367,18 @@
                                         ⏳ Solicitação enviada! Aguardando confirmação do motorista {{ conversa.carona.motorista.username }}.
                                     </div>
                                 {% elif solicitacao.status == "aceita" %}
-                                    <div class="status-badge-aceita">
-                                        ✅ Sua solicitação foi aceita! Vaga confirmada com o motorista.
-                                    </div>
+                                    {% if conversa.carona.status == "encerrada" %}
+                                        <div class="status-badge-aceita" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                                            <span>🏁 A carona foi concluída e encerrada pelo motorista!</span>
+                                            <a href="{% url 'perfil_motorista' conversa.carona.motorista.id %}" class="btn-primary-sm" style="background-color: #f59e0b; border-color: #f59e0b; text-decoration: none; font-size: 12px; padding: 5px 12px;">
+                                                ⭐ Avaliar Motorista
+                                            </a>
+                                        </div>
+                                    {% else %}
+                                        <div class="status-badge-aceita">
+                                            ✅ Sua solicitação foi aceita! Vaga confirmada com o motorista. (A avaliação será liberada após o motorista encerrar a carona).
+                                        </div>
+                                    {% endif %}
                                 {% elif solicitacao.status == "recusada" %}
                                     <div class="status-badge-recusada">
                                         ❌ Sua solicitação foi recusada pelo motorista.
@@ -370,9 +400,15 @@
                                         </div>
                                     </div>
                                 {% elif solicitacao and solicitacao.status == "aceita" %}
-                                    <div class="status-badge-aceita">
-                                        ✅ Você aceitou a solicitação de {{ solicitacao.passageiro.username }}. Vagas restantes: {{ conversa.carona.vagas }}.
-                                    </div>
+                                    {% if conversa.carona.status == "encerrada" %}
+                                        <div class="status-badge-aceita">
+                                            🏁 Você encerrou esta carona. As avaliações de {{ solicitacao.passageiro.username }} foram liberadas.
+                                        </div>
+                                    {% else %}
+                                        <div class="status-badge-aceita">
+                                            ✅ Você aceitou a solicitação de {{ solicitacao.passageiro.username }}. Vagas restantes: {{ conversa.carona.vagas }}.
+                                        </div>
+                                    {% endif %}
                                 {% elif solicitacao and solicitacao.status == "recusada" %}
                                     <div class="status-badge-recusada">
                                         ❌ Você recusou a solicitação de {{ solicitacao.passageiro.username }}.
