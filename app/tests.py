@@ -1,10 +1,11 @@
+import json
 from django.test import TestCase, Client
 from django.contrib.auth.models import User, Group
 from django.urls import reverse
 from django.utils import timezone
 from django.contrib.admin.sites import AdminSite
 
-from app.models import PerfilUsuario, SolicitacaoCNH, Pais, Estado, Cidade, Destino, Carona
+from app.models import PerfilUsuario, SolicitacaoCNH, Pais, Estado, Cidade, Destino, Carona, Conversa, SolicitacaoCarona, Mensagem
 from app.permissions import pode_cadastrar_carona
 from app.admin import SolicitacaoCNHAdmin
 
@@ -250,3 +251,145 @@ class ControleAcessoCaronaTestCase(TestCase):
 
         user_sem_perfil = User(username="sem_perfil_db")
         self.assertFalse(pode_cadastrar_carona(user_sem_perfil))
+
+    def test_reutilizacao_conversa_ao_pedir_carona_mesmo_motorista(self):
+        """Garante que pedir carona com o mesmo motorista reutiliza a conversa existente e não cria duplicatas."""
+        self.client.login(username="usuario_comum", password="password123")
+
+        carona_1 = Carona.objects.create(
+            motorista=self.user_motorista,
+            origem=self.cidade,
+            destino=self.destino,
+            data_hora=timezone.now() + timezone.timedelta(days=1),
+            valor="20.00",
+            vagas=3
+        )
+        carona_2 = Carona.objects.create(
+            motorista=self.user_motorista,
+            origem=self.cidade,
+            destino=self.destino,
+            data_hora=timezone.now() + timezone.timedelta(days=3),
+            valor="25.00",
+            vagas=2
+        )
+
+        # 1. Pede a primeira carona: cria a conversa
+        resp1 = self.client.get(reverse("iniciar_chat_carona", kwargs={"carona_id": carona_1.id}))
+        self.assertEqual(resp1.status_code, 302)
+        conversas_iniciais = Conversa.objects.filter(
+            participantes=self.user_comum
+        ).filter(
+            participantes=self.user_motorista
+        )
+        self.assertEqual(conversas_iniciais.count(), 1)
+        conversa_criada = conversas_iniciais.first()
+        self.assertEqual(conversa_criada.carona, carona_1)
+
+        # 2. Pede uma segunda carona com o mesmo motorista: deve REUTILIZAR a mesma conversa
+        resp2 = self.client.get(reverse("iniciar_chat_carona", kwargs={"carona_id": carona_2.id}))
+        self.assertEqual(resp2.status_code, 302)
+        conversas_apos = Conversa.objects.filter(
+            participantes=self.user_comum
+        ).filter(
+            participantes=self.user_motorista
+        )
+        # Não deve criar uma nova conversa (total continua 1)
+        self.assertEqual(conversas_apos.count(), 1)
+        conversa_reutilizada = conversas_apos.first()
+        self.assertEqual(conversa_reutilizada.id, conversa_criada.id)
+        # A carona associada da conversa foi atualizada para a nova carona solicitada
+        self.assertEqual(conversa_reutilizada.carona, carona_2)
+
+    def test_excluir_conversas_selecionadas(self):
+        """Garante que a exclusão em lote de conversas selecionadas remove do banco somente as do participante autenticado."""
+        self.client.login(username="usuario_comum", password="password123")
+
+        conversa1 = Conversa.objects.create()
+        conversa1.participantes.add(self.user_comum, self.user_motorista)
+        conversa2 = Conversa.objects.create()
+        conversa2.participantes.add(self.user_comum, self.admin)
+
+        # Outra conversa da qual o usuário comum NÃO faz parte
+        conversa_alheia = Conversa.objects.create()
+        conversa_alheia.participantes.add(self.user_motorista, self.admin)
+
+        # Excluir conversa1 e tentar excluir conversa_alheia
+        payload = json.dumps({"conversa_ids": [conversa1.id, conversa_alheia.id]})
+        response = self.client.post(
+            reverse("excluir_conversas"),
+            data=payload,
+            content_type="application/json"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data.get("sucesso"))
+        self.assertEqual(data.get("quantidade"), 1)
+
+        # Conversa 1 excluída
+        self.assertFalse(Conversa.objects.filter(id=conversa1.id).exists())
+        # Conversa 2 ainda existe
+        self.assertTrue(Conversa.objects.filter(id=conversa2.id).exists())
+        # Conversa alheia NÃO foi excluída
+        self.assertTrue(Conversa.objects.filter(id=conversa_alheia.id).exists())
+
+    def test_recusa_carona_com_e_sem_feedback(self):
+        """Garante que a recusa da solicitação pelo motorista salva o feedback opcional e cria a mensagem no chat."""
+        carona = Carona.objects.create(
+            motorista=self.user_motorista,
+            origem=self.cidade,
+            destino=self.destino,
+            data_hora=timezone.now() + timezone.timedelta(days=1),
+            valor="20.00",
+            vagas=3
+        )
+        conversa = Conversa.objects.create(carona=carona)
+        conversa.participantes.add(self.user_motorista, self.user_comum)
+
+        solicitacao = SolicitacaoCarona.objects.create(
+            carona=carona,
+            passageiro=self.user_comum,
+            conversa=conversa,
+            status=SolicitacaoCarona.Status.PENDENTE
+        )
+
+        # 1. Login como motorista e recusa COM feedback
+        self.client.login(username="motorista_aprovado", password="password123")
+        url = reverse("responder_solicitacao", kwargs={"conversa_id": conversa.id, "solicitacao_id": solicitacao.id})
+        resp = self.client.post(url, {
+            "acao": "recusar",
+            "motivo_recusa": "Porta-malas cheio de encomendas."
+        })
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertTrue(data.get("sucesso"))
+        self.assertEqual(data.get("status"), "recusada")
+        self.assertEqual(data.get("motivo_recusa"), "Porta-malas cheio de encomendas.")
+
+        solicitacao.refresh_from_db()
+        self.assertEqual(solicitacao.status, SolicitacaoCarona.Status.RECUSADA)
+        self.assertEqual(solicitacao.motivo_recusa, "Porta-malas cheio de encomendas.")
+
+        msg = Mensagem.objects.filter(conversa=conversa).order_by("-enviado_em").first()
+        self.assertIn("❌ Solicitação de vaga recusada pelo motorista.", msg.texto)
+        self.assertIn("Motivo: Porta-malas cheio de encomendas.", msg.texto)
+
+        # 2. Testa recusa SEM feedback (opcional) em outra solicitação
+        solicitacao2 = SolicitacaoCarona.objects.create(
+            carona=carona,
+            passageiro=self.user_comum,
+            conversa=conversa,
+            status=SolicitacaoCarona.Status.PENDENTE
+        )
+        url2 = reverse("responder_solicitacao", kwargs={"conversa_id": conversa.id, "solicitacao_id": solicitacao2.id})
+        resp2 = self.client.post(url2, {
+            "acao": "recusar",
+            "motivo_recusa": ""
+        })
+        self.assertEqual(resp2.status_code, 200)
+        solicitacao2.refresh_from_db()
+        self.assertEqual(solicitacao2.status, SolicitacaoCarona.Status.RECUSADA)
+        self.assertIsNone(solicitacao2.motivo_recusa)
+
+        msg2 = Mensagem.objects.filter(conversa=conversa).order_by("-enviado_em").first()
+        self.assertEqual(msg2.texto, "❌ Solicitação de vaga recusada pelo motorista.")
+

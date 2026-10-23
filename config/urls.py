@@ -29,6 +29,7 @@ urlpatterns = [
     path("caronas/<int:carona_id>/avaliar/", AvaliarCaronaView.as_view(), name="avaliar_carona"),
     path("chats/", ChatView.as_view(), name="chats"),
     path("chats/contadores/", ContadoresChatView.as_view(), name="contadores_chat"),
+    path("chat/excluir/", ExcluirConversasView.as_view(), name="excluir_conversas"),
     path("chat/<int:conversa_id>/", AbrirChatView.as_view(), name="abrir_chat"),
     path("chat/<int:conversa_id>/enviar/", EnviarMensagemView.as_view(), name="enviar_mensagem"),
     path("chat/<int:conversa_id>/mensagens/", BuscarMensagensView.as_view(), name="buscar_mensagens"),

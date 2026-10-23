@@ -5,7 +5,8 @@ from django.contrib import messages
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.models import User, Group
-from django.db.models import Count, Avg, Q, Exists, OuterRef
+from django.db.models import Count, Avg, Q, Exists, OuterRef, Max
+from django.db.models.functions import Coalesce
 from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse_lazy
@@ -731,6 +732,12 @@ class AvaliarCaronaView(
         else:
             messages.success(request, "Sua avaliação foi atualizada com sucesso!")
 
+        if request.headers.get("x-requested-with") == "XMLHttpRequest" or "application/json" in request.headers.get("Accept", ""):
+            return JsonResponse({
+                "sucesso": True,
+                "mensagem": f"Avaliação de {nota}★ registrada com sucesso!"
+            })
+
         next_url = request.POST.get("next") or request.META.get("HTTP_REFERER")
         if next_url:
             return redirect(next_url)
@@ -836,6 +843,48 @@ class VerificacaoCNHView(LoginRequiredMixin, View):
             }
         )
 
+def carregar_conversas_usuario(user):
+    conversas = list(
+        Conversa.objects
+        .filter(participantes=user)
+        .annotate(
+            mensagens_nao_lidas=Count(
+                "mensagens",
+                filter=(
+                    Q(mensagens__lida=False)
+                    & ~Q(mensagens__remetente=user)
+                ),
+                distinct=True
+            ),
+            ultima_mensagem_data=Coalesce(
+                Max("mensagens__enviado_em"),
+                "criado_em"
+            )
+        )
+        .select_related("carona__motorista", "carona__origem", "carona__destino")
+        .prefetch_related("participantes")
+        .order_by("-ultima_mensagem_data")
+    )
+
+    for item in conversas:
+        item.solicitacao_status = None
+        if item.carona:
+            eh_motorista = (item.carona.motorista_id == user.id)
+            outro_part = next((p for p in item.participantes.all() if p.id != user.id), None)
+            passageiro_alvo = outro_part if eh_motorista else user
+            if passageiro_alvo:
+                sol = (
+                    SolicitacaoCarona.objects
+                    .filter(carona=item.carona, passageiro=passageiro_alvo)
+                    .order_by("-criado_em")
+                    .first()
+                )
+                if sol:
+                    item.solicitacao_status = sol.status
+
+    return conversas
+
+
 class ChatView(
     LoginRequiredMixin,
     View
@@ -847,34 +896,7 @@ class ChatView(
         *args,
         **kwargs
     ):
-
-        conversas = (
-            Conversa.objects
-            .filter(
-                participantes=request.user
-            )
-            .annotate(
-                mensagens_nao_lidas=Count(
-                    "mensagens",
-                    filter=(
-                        Q(
-                            mensagens__lida=False
-                        )
-                        &
-                        ~Q(
-                            mensagens__remetente=request.user
-                        )
-                    ),
-                    distinct=True
-                )
-            )
-            .prefetch_related(
-                "participantes"
-            )
-            .order_by(
-                "-criado_em"
-            )
-        )
+        conversas = carregar_conversas_usuario(request.user)
 
         return render(
             request,
@@ -898,21 +920,26 @@ class AbrirChatView(
         **kwargs
     ):
 
-        conversa = get_object_or_404(
-            Conversa.objects.select_related("carona__motorista", "carona__origem", "carona__destino").prefetch_related(
+        conversa = (
+            Conversa.objects
+            .filter(id=conversa_id)
+            .select_related("carona__motorista", "carona__origem", "carona__destino")
+            .prefetch_related(
                 "participantes",
                 "mensagens__remetente"
-            ),
-            id=conversa_id
+            )
+            .first()
         )
+
+        if not conversa:
+            messages.warning(request, "Esta conversa não existe ou já foi excluída.")
+            return redirect("chats")
 
         if not conversa.participantes.filter(
             id=request.user.id
         ).exists():
-
-            return HttpResponseForbidden(
-                "Você não participa desta conversa."
-            )
+            messages.error(request, "Você não participa desta conversa.")
+            return redirect("chats")
 
         conversa.mensagens.filter(
             lida=False
@@ -922,35 +949,7 @@ class AbrirChatView(
             lida=True
         )
 
-        conversas = (
-            Conversa.objects
-            .filter(
-                participantes=request.user
-            )
-            .annotate(
-                mensagens_nao_lidas=Count(
-                    "mensagens",
-                    filter=(
-                        Q(
-                            mensagens__lida=False
-                        )
-                        &
-                        ~Q(
-                            mensagens__remetente=request.user
-                        )
-                    ),
-                    distinct=True
-                )
-            )
-            .prefetch_related(
-                "participantes",
-                "carona__origem",
-                "carona__destino"
-            )
-            .order_by(
-                "-criado_em"
-            )
-        )
+        conversas = carregar_conversas_usuario(request.user)
 
         mensagens = (
             conversa.mensagens
@@ -986,6 +985,13 @@ class AbrirChatView(
                     .first()
                 )
 
+        ja_avaliou = False
+        if conversa.carona and eh_passageiro:
+            ja_avaliou = Avaliacao.objects.filter(
+                carona=conversa.carona,
+                avaliador=request.user
+            ).exists()
+
         return render(
             request,
             "chat.html",
@@ -997,8 +1003,72 @@ class AbrirChatView(
                 "eh_motorista": eh_motorista,
                 "eh_passageiro": eh_passageiro,
                 "outro_participante": outro_participante,
+                "ja_avaliou": ja_avaliou,
             }
         )
+
+
+class ExcluirConversasView(
+    LoginRequiredMixin,
+    View
+):
+    login_url = "/login/"
+
+    def post(
+        self,
+        request,
+        *args,
+        **kwargs
+    ):
+        import json
+        conversas_ids = []
+
+        if request.content_type == "application/json":
+            try:
+                dados = json.loads(request.body.decode("utf-8"))
+                conversas_ids = dados.get("conversas_ids") or dados.get("conversa_ids") or []
+            except Exception:
+                conversas_ids = []
+        else:
+            conversas_ids = request.POST.getlist("conversas_ids") or request.POST.getlist("conversa_ids")
+
+        is_ajax_or_json = (
+            request.headers.get("x-requested-with") == "XMLHttpRequest"
+            or "application/json" in request.headers.get("Accept", "")
+            or request.content_type == "application/json"
+        )
+
+        if not conversas_ids:
+            if is_ajax_or_json:
+                return JsonResponse({"sucesso": False, "erro": "Nenhuma conversa foi selecionada."}, status=400)
+            messages.warning(request, "Nenhuma conversa foi selecionada.")
+            return redirect("chats")
+
+        # Filtra apenas conversas que o usuário logado realmente participa
+        conversas = Conversa.objects.filter(
+            id__in=conversas_ids,
+            participantes=request.user
+        )
+        qtd = conversas.count()
+
+        if qtd == 0:
+            if is_ajax_or_json:
+                return JsonResponse({"sucesso": False, "erro": "Nenhuma conversa válida encontrada para exclusão."}, status=404)
+            messages.warning(request, "Nenhuma conversa válida encontrada para exclusão.")
+            return redirect("chats")
+
+        # Exclui definitivamente as conversas e todas as mensagens associadas
+        conversas.delete()
+
+        if is_ajax_or_json:
+            return JsonResponse({
+                "sucesso": True,
+                "quantidade": qtd,
+                "mensagem": f"{qtd} conversa{'s' if qtd > 1 else ''} excluída{'s' if qtd > 1 else ''} com sucesso!"
+            })
+
+        messages.success(request, f"{qtd} conversa{'s' if qtd > 1 else ''} excluída{'s' if qtd > 1 else ''} com sucesso!")
+        return redirect("chats")
 
 
 class ContadoresChatView(
@@ -1055,10 +1125,9 @@ class EnviarMensagemView(
         **kwargs
     ):
 
-        conversa = get_object_or_404(
-            Conversa,
-            id=conversa_id
-        )
+        conversa = Conversa.objects.filter(id=conversa_id).first()
+        if not conversa:
+            return JsonResponse({"sucesso": False, "erro": "Esta conversa não existe ou foi excluída."}, status=404)
 
         if not conversa.participantes.filter(
             id=request.user.id
@@ -1122,10 +1191,14 @@ class BuscarMensagensView(
         **kwargs
     ):
 
-        conversa = get_object_or_404(
-            Conversa.objects.select_related("carona__motorista"),
-            id=conversa_id
+        conversa = (
+            Conversa.objects
+            .filter(id=conversa_id)
+            .select_related("carona__motorista")
+            .first()
         )
+        if not conversa:
+            return JsonResponse({"erro": "Esta conversa não existe ou foi excluída."}, status=404)
 
         if not conversa.participantes.filter(
             id=request.user.id
@@ -1195,7 +1268,17 @@ class BuscarMensagensView(
                         "status_display": sol.get_status_display(),
                         "passageiro": sol.passageiro.username,
                         "passageiro_id": sol.passageiro.id,
+                        "motivo_recusa": sol.motivo_recusa,
                     }
+
+        ja_avaliou = False
+        if conversa.carona:
+            eh_motorista = (conversa.carona.motorista_id == request.user.id)
+            if not eh_motorista:
+                ja_avaliou = Avaliacao.objects.filter(
+                    carona=conversa.carona,
+                    avaliador=request.user
+                ).exists()
 
         return JsonResponse(
             {
@@ -1203,6 +1286,11 @@ class BuscarMensagensView(
                 "solicitacao": solicitacao_data,
                 "vagas": conversa.carona.vagas if conversa.carona else None,
                 "eh_motorista": (conversa.carona.motorista_id == request.user.id) if conversa.carona else False,
+                "carona_id": conversa.carona.id if conversa.carona else None,
+                "carona_status": conversa.carona.status if conversa.carona else None,
+                "ja_avaliou": ja_avaliou,
+                "motorista_id": conversa.carona.motorista_id if conversa.carona else None,
+                "motorista_nome": (conversa.carona.motorista.first_name or conversa.carona.motorista.username) if conversa.carona else "",
             }
         )
 
@@ -1279,30 +1367,24 @@ class IniciarChatCaronaView(
             messages.info(request, "Você é o motorista desta carona.")
             return redirect("minhas_caronas")
 
-        # Busca conversa existente com esta carona entre os dois usuários
+        # Verifica se já existe qualquer conversa entre os dois usuários (na sua lista de conversas)
         conversa = (
             Conversa.objects
-            .filter(carona=carona)
             .filter(participantes=request.user)
             .filter(participantes=carona.motorista)
+            .order_by("-id")
             .first()
         )
 
-        if not conversa:
-            # Procura se há conversa genérica entre eles para associar a esta carona
-            conversa = (
-                Conversa.objects
-                .filter(participantes=request.user)
-                .filter(participantes=carona.motorista)
-                .filter(carona__isnull=True)
-                .first()
-            )
-            if conversa:
+        if conversa:
+            # Reutiliza a conversa existente e atualiza para a nova carona solicitada
+            if conversa.carona_id != carona.id:
                 conversa.carona = carona
                 conversa.save(update_fields=["carona"])
-            else:
-                conversa = Conversa.objects.create(carona=carona)
-                conversa.participantes.add(request.user, carona.motorista)
+        else:
+            # Se não houver conversa anterior com esse usuário, cria uma nova
+            conversa = Conversa.objects.create(carona=carona)
+            conversa.participantes.add(request.user, carona.motorista)
 
         return redirect(
             "abrir_chat",
@@ -1413,9 +1495,18 @@ class ResponderSolicitacaoView(
 
         solicitacao = get_object_or_404(
             SolicitacaoCarona.objects.select_related("carona", "passageiro"),
-            id=solicitacao_id,
-            carona=conversa.carona
+            id=solicitacao_id
         )
+
+        if conversa.carona and solicitacao.carona_id != conversa.carona_id:
+            return JsonResponse(
+                {"sucesso": False, "erro": "A solicitação não pertence à carona desta conversa."},
+                status=400
+            )
+
+        if not conversa.carona:
+            conversa.carona = solicitacao.carona
+            conversa.save(update_fields=["carona"])
 
         if solicitacao.carona.motorista_id != request.user.id:
             return JsonResponse(
@@ -1423,7 +1514,19 @@ class ResponderSolicitacaoView(
                 status=403
             )
 
-        acao = request.POST.get("acao", "").strip().lower()
+        acao = ""
+        motivo_recusa = ""
+        if request.content_type == "application/json":
+            try:
+                dados = json.loads(request.body.decode("utf-8"))
+                acao = (dados.get("acao") or "").strip().lower()
+                motivo_recusa = (dados.get("motivo_recusa") or "").strip()
+            except Exception:
+                pass
+
+        if not acao:
+            acao = request.POST.get("acao", "").strip().lower()
+            motivo_recusa = request.POST.get("motivo_recusa", "").strip()
 
         if acao == "aceitar":
             if solicitacao.carona.vagas <= 0:
@@ -1463,20 +1566,28 @@ class ResponderSolicitacaoView(
             })
 
         elif acao == "recusar":
+            motivo_recusa = motivo_recusa or request.POST.get("motivo_recusa", "").strip()
             solicitacao.status = SolicitacaoCarona.Status.RECUSADA
+            solicitacao.motivo_recusa = motivo_recusa if motivo_recusa else None
             solicitacao.respondido_em = timezone.now()
-            solicitacao.save(update_fields=["status", "respondido_em"])
+            solicitacao.save(update_fields=["status", "motivo_recusa", "respondido_em"])
+
+            if motivo_recusa:
+                texto_msg = f"❌ Solicitação de vaga recusada pelo motorista. Motivo: {motivo_recusa}"
+            else:
+                texto_msg = "❌ Solicitação de vaga recusada pelo motorista."
 
             Mensagem.objects.create(
                 conversa=conversa,
                 remetente=request.user,
-                texto="❌ Solicitação de vaga recusada pelo motorista."
+                texto=texto_msg
             )
 
             return JsonResponse({
                 "sucesso": True,
                 "status": "recusada",
                 "status_display": "Recusada",
+                "motivo_recusa": solicitacao.motivo_recusa,
                 "vagas": solicitacao.carona.vagas,
                 "mensagem": "Solicitação recusada."
             })

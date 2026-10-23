@@ -388,6 +388,11 @@ class SolicitacaoCarona(models.Model):
         blank=True,
         verbose_name="Respondido em"
     )
+    motivo_recusa = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name="Motivo / Feedback da recusa"
+    )
 
     class Meta:
         verbose_name = "Solicitação de Carona"

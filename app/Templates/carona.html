@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minhas Caronas - Caronas IF</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=20261023_v4">
     <style>
         .badge-status-ativa {
             display: inline-block;
@@ -278,6 +278,12 @@
                                         {{ sol.carona.motorista.first_name|default:sol.carona.motorista.username }}
                                     </a>
                                 </p>
+
+                                {% if sol.status == 'recusada' and sol.motivo_recusa %}
+                                    <p style="font-size: 13px; color: #dc2626; margin: 6px 0 2px 0; background: #fef2f2; padding: 6px 10px; border-radius: 6px; border: 1px solid #fee2e2;">
+                                        <strong>Motivo da recusa:</strong> {{ sol.motivo_recusa }}
+                                    </p>
+                                {% endif %}
 
                                 {% if sol.status == 'aceita' and sol.carona.status == 'ativa' %}
                                     <p style="font-size: 12px; color: #64748b; margin-top: 4px;">

@@ -176,30 +176,40 @@ footer {
     border-right: 1px solid #e2e8f0;
     display: flex;
     flex-direction: column;
-    padding: 20px;
+    padding: 14px 12px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    height: 100vh;
+    height: 100dvh;
+    flex-shrink: 0;
+    overflow: hidden;
+    z-index: 1000;
 }
 
 .sidebar-brand h2 {
     color: #2e7d32;
-    font-size: 22px;
-    margin-bottom: 30px;
+    font-size: 19px;
+    margin-bottom: 14px;
+    padding-left: 8px;
 }
 
 .sidebar-menu {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
     flex: 1;
 }
 
 .menu-item {
     display: flex;
     align-items: center;
-    padding: 12px 15px;
+    padding: 8px 12px;
     color: #555;
     text-decoration: none;
     border-radius: 8px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     transition: background-color 0.2s, color 0.2s;
 }
@@ -212,10 +222,11 @@ footer {
 
 .sidebar-footer {
     border-top: 1px solid #eee;
-    padding-top: 15px;
+    padding-top: 10px;
+    margin-top: auto;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
 }
 
 .logout-form {
@@ -246,6 +257,9 @@ button.menu-item:hover,
     flex: 1;
     display: flex;
     flex-direction: column;
+    min-width: 0;
+    margin-left: 240px;
+    width: calc(100% - 240px);
 }
 
 .top-header {
@@ -862,8 +876,13 @@ h3.driver-name a:hover {
 @media (max-width: 600px) {
 
     .sidebar {
-        width: 200px;
-        padding: 15px;
+        width: 190px;
+        padding: 12px 8px;
+    }
+
+    .main-wrapper {
+        margin-left: 190px;
+        width: calc(100% - 190px);
     }
 
     .top-header {
@@ -912,16 +931,23 @@ h3.driver-name a:hover {
 @media (max-width: 450px) {
 
     .sidebar {
-        width: 180px;
+        width: 155px;
+        padding: 10px 6px;
+    }
+
+    .main-wrapper {
+        margin-left: 155px;
+        width: calc(100% - 155px);
     }
 
     .sidebar-brand h2 {
-        font-size: 18px;
+        font-size: 16px;
+        margin-bottom: 10px;
     }
 
     .menu-item {
-        padding: 10px;
-        font-size: 13px;
+        padding: 7px 8px;
+        font-size: 12px;
     }
 
     .profile-header h1 {
@@ -942,6 +968,27 @@ h3.driver-name a:hover {
 
     .profile-username {
         font-size: 18px;
+    }
+}
+
+@media (max-height: 620px) {
+    .sidebar {
+        padding: 8px 8px;
+    }
+    .sidebar-brand h2 {
+        font-size: 16px;
+        margin-bottom: 8px;
+    }
+    .sidebar-menu {
+        gap: 2px;
+    }
+    .menu-item {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+    .sidebar-footer {
+        padding-top: 6px;
+        gap: 2px;
     }
 }
 
@@ -1022,59 +1069,76 @@ CHAT / MENSAGENS
 
 .chat-content {
     display: flex;
-    padding: 30px;
-    gap: 20px;
+    padding: 20px 24px;
+    gap: 16px;
     height: calc(100vh - 60px);
     min-height: 500px;
-    }
-    
-    .chat-list-card {
-    width: 320px;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    max-width: 100%;
+}
+
+.chat-list-card {
+    width: 330px;
+    min-width: 270px;
+    max-width: 380px;
+    flex-shrink: 0;
     background: #fff;
     border: 1px solid #e2e8f0;
     border-radius: 10px;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    }
-    
-    .chat-list-header {
-    padding: 20px;
+    box-sizing: border-box;
+}
+
+.chat-list-header {
+    padding: 16px 20px;
     border-bottom: 1px solid #e2e8f0;
-    }
-    
-    .chat-list-header h2 {
+    box-sizing: border-box;
+}
+
+.chat-list-header h2 {
     font-size: 18px;
     color: #333;
     margin: 0;
-    }
-    
-    .chat-list {
+}
+
+.chat-list {
     overflow-y: auto;
+    overflow-x: hidden;
     flex: 1;
-    }
-    
-    .chat-item {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.chat-item {
     display: block;
-    padding: 15px;
+    padding: 12px 14px;
     border-bottom: 1px solid #f1f5f9;
     text-decoration: none;
     color: #333;
     transition: background-color 0.2s;
-    }
-    
-    .chat-item:hover,
-    .chat-item.active {
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.chat-item:hover,
+.chat-item.active {
     background-color: #f0fdf4;
-    }
-    
-    .chat-item-top {
+}
+
+.chat-item-top {
     display: flex;
     align-items: center;
     gap: 10px;
-    }
-    
-    .chat-avatar {
+    width: 100%;
+    min-width: 0;
+}
+
+.chat-avatar {
     width: 42px;
     height: 42px;
     min-width: 42px;
@@ -1086,36 +1150,41 @@ CHAT / MENSAGENS
     justify-content: center;
     font-weight: bold;
     text-transform: uppercase;
-    }
-    
-    .chat-item-info {
+    flex-shrink: 0;
+}
+
+.chat-item-info {
     min-width: 0;
     flex: 1;
-    }
-    
-    .chat-item-name {
+    overflow: hidden;
+}
+
+.chat-item-name {
     font-size: 14px;
     font-weight: bold;
     color: #333;
     margin-bottom: 4px;
-    }
-    
-    .chat-item-route {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chat-item-route {
     font-size: 12px;
     color: #777;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    }
-    
-    .chat-empty {
+}
+
+.chat-empty {
     padding: 30px 20px;
     text-align: center;
     color: #777;
     font-size: 13px;
-    }
-    
-    .chat-window {
+}
+
+.chat-window {
     flex: 1;
     background: #fff;
     border: 1px solid #e2e8f0;
@@ -1124,7 +1193,8 @@ CHAT / MENSAGENS
     flex-direction: column;
     overflow: hidden;
     min-width: 0;
-    }
+    box-sizing: border-box;
+}
     
     .chat-window-header {
     padding: 15px 20px;

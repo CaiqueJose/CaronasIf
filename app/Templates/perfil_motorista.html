@@ -5,8 +5,85 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Perfil de {{ motorista.username }} - Caronas IF</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=20261023_v4">
     <style>
+        .sidebar {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            bottom: 0 !important;
+            width: 240px !important;
+            height: 100vh !important;
+            height: 100dvh !important;
+            overflow: hidden !important;
+            z-index: 1000 !important;
+            padding: 14px 12px !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+        .main-wrapper {
+            margin-left: 240px !important;
+            width: calc(100% - 240px) !important;
+            flex: 1 !important;
+            min-width: 0 !important;
+        }
+        .sidebar-brand h2 {
+            font-size: 19px !important;
+            margin-bottom: 14px !important;
+            padding-left: 8px !important;
+        }
+        .sidebar-menu {
+            gap: 4px !important;
+        }
+        .menu-item {
+            padding: 8px 12px !important;
+            font-size: 13px !important;
+        }
+        .sidebar-footer {
+            padding-top: 10px !important;
+            margin-top: auto !important;
+            gap: 4px !important;
+        }
+        @media (max-width: 600px) {
+            .sidebar {
+                width: 190px !important;
+                padding: 12px 8px !important;
+            }
+            .main-wrapper {
+                margin-left: 190px !important;
+                width: calc(100% - 190px) !important;
+            }
+        }
+        @media (max-width: 450px) {
+            .sidebar {
+                width: 155px !important;
+                padding: 10px 6px !important;
+            }
+            .main-wrapper {
+                margin-left: 155px !important;
+                width: calc(100% - 155px) !important;
+            }
+        }
+        @media (max-height: 620px) {
+            .sidebar {
+                padding: 8px 8px !important;
+            }
+            .sidebar-brand h2 {
+                font-size: 16px !important;
+                margin-bottom: 8px !important;
+            }
+            .sidebar-menu {
+                gap: 2px !important;
+            }
+            .menu-item {
+                padding: 6px 10px !important;
+                font-size: 12px !important;
+            }
+            .sidebar-footer {
+                padding-top: 6px !important;
+                gap: 2px !important;
+            }
+        }
         .star-rating-selector {
             display: inline-flex;
             flex-direction: row-reverse;
@@ -29,186 +106,277 @@
             color: #f59e0b;
             transform: scale(1.1);
         }
-        .profile-actions-container {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            width: 100%;
-            margin-top: 15px;
-        }
         .btn-avaliar-motorista {
             background-color: #f59e0b;
             color: #ffffff;
             border: none;
-            padding: 10px 18px;
+            padding: 8px 16px;
             border-radius: 8px;
             font-weight: 600;
-            font-size: 14px;
+            font-size: 13px;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 6px;
             transition: background-color 0.2s;
             text-decoration: none;
+            height: 38px;
+            box-sizing: border-box;
         }
         .btn-avaliar-motorista:hover {
             background-color: #d97706;
+        }
+        .alert {
+            padding: 14px 18px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .alert-danger {
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+        .alert-success {
+            background-color: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
         }
     </style>
 </head>
 <body>
 
-<header class="profile-header">
-    <a href="{% url 'index' %}" class="back-button">
-        ← Voltar
-    </a>
-    <h1>Perfil do Motorista</h1>
-</header>
+<div class="app-container">
 
-<main class="profile-page">
-
-    {% if messages %}
-        <div style="width: 100%; margin-bottom: 20px;">
-            {% for message in messages %}
-                <div class="alert {% if 'error' in message.tags or 'danger' in message.tags %}alert-danger{% else %}alert-success{% endif %}"
-                     style="padding: 14px 18px; border-radius: 8px; margin-bottom: 10px; font-size: 14px; font-weight: 500;
-                     {% if 'error' in message.tags or 'danger' in message.tags %}background-color: #fef2f2; color: #991b1b; border: 1px solid #fecaca;{% else %}background-color: #f0fdf4; color: #166534; border: 1px solid #bbf7d0;{% endif %}">
-                    {{ message }}
-                </div>
-            {% endfor %}
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <h2>Caronas IF</h2>
         </div>
-    {% endif %}
+        <nav class="sidebar-menu">
+            <a href="{% url 'index' %}" class="menu-item">Início</a>
+            <a href="{% url 'minhas_caronas' %}" class="menu-item">Minhas Caronas</a>
+            <a href="#" class="menu-item">Buscar Caronas</a>
+            <a href="{% url 'chats' %}" class="menu-item">Mensagens</a>
+            <a href="{% url 'avaliacoes' %}" class="menu-item">Avaliações</a>
+            {% if contexto_motorista %}
+                <a href="{% url 'criar_carona' %}" class="menu-item">Cadastrar Carona</a>
+            {% elif request.user.is_authenticated %}
+                <a href="{% url 'verificacao_cnh' %}" class="menu-item">Verificação de CNH</a>
+            {% endif %}
+        </nav>
 
-    <!-- Informações do motorista -->
-    <section class="profile-card">
-        <div class="profile-avatar">
-            {{ motorista.username|first|upper }}
-        </div>
-
-        <h2 class="profile-username">
-            {{ motorista.username }}
-        </h2>
-
-        <p class="profile-fullname">
-            {{ motorista.first_name }} {{ motorista.last_name }}
-        </p>
-
-        {% if motorista.perfil.is_verificado %}
-            <span class="verified-badge">
-                ✓ Motorista verificado
-            </span>
-        {% else %}
-            <span class="unverified-badge">
-                Motorista não verificado
-            </span>
-        {% endif %}
-
-        <div class="profile-info">
-            {% if motorista.perfil.telefone %}
-                <div class="profile-info-item">
-                    <span class="info-label">Telefone</span>
-                    <span class="info-value">{{ motorista.perfil.telefone }}</span>
-                </div>
+        <div class="sidebar-footer">
+            {% if request.user.is_staff %}
+                <a href="{% url 'admin:index' %}" class="menu-item" target="_blank">Administração</a>
             {% endif %}
 
-            <div class="profile-info-item">
-                <span class="info-label">Membro desde</span>
-                <span class="info-value">{{ motorista.date_joined|date:"d/m/Y" }}</span>
-            </div>
+            <form action="{% url 'logout' %}" method="post" class="logout-form">
+                {% csrf_token %}
+                <button type="submit" class="menu-item btn-logout">
+                    Sair
+                </button>
+            </form>
         </div>
+    </aside>
 
-        <!-- Botões de Ação para Passageiros -->
-        {% if user.is_authenticated and user.id != motorista.id %}
-            <div class="profile-actions-container">
-                <a href="{% url 'iniciar_chat_motorista' motorista.id %}" class="chat-button">
-                    💬 Conversar com motorista
+    <div class="main-wrapper">
+        <header class="top-header">
+            <div></div>
+            <div class="user-profile">
+                <a href="{% url 'perfil' %}" class="menu-item" style="display: inline-flex; align-items: center; gap: 8px;">
+                    👤 {{ request.user.username }}
                 </a>
-
-                {% if pode_avaliar %}
-                    <button type="button" class="btn-avaliar-motorista" onclick="openModalAvaliacao()">
-                        {% if minha_avaliacao %}
-                            ✏️ Alterar minha avaliação ({{ minha_avaliacao.nota }}★)
-                        {% else %}
-                            ⭐ Avaliar este Motorista
-                        {% endif %}
-                    </button>
-                {% endif %}
             </div>
-        {% endif %}
-    </section>
+        </header>
 
-    <!-- Avaliação média -->
-    <section class="rating-card">
-        <h2>Avaliação do motorista</h2>
-
-        <div class="rating-main">
-            {% if media_avaliacao %}
-                <div class="rating-number">
-                    {{ media_avaliacao|floatformat:1 }}
+        <main class="dashboard-content">
+            <section class="feed-section">
+                <div class="welcome-banner">
+                    <span class="greeting">Perfil do Motorista</span>
+                    <h1>{% if motorista.first_name %}{{ motorista.first_name }} {{ motorista.last_name }}{% else %}{{ motorista.username }}{% endif %}</h1>
+                    <p class="subtitle">Confira as informações e avaliações de {{ motorista.username }} no Caronas IF</p>
                 </div>
-                <div class="rating-stars">
-                    ⭐⭐⭐⭐⭐
-                </div>
-                <p>Média calculada com base em {{ avaliacoes.count }} avaliação{{ avaliacoes.count|pluralize:"ões" }}</p>
-            {% else %}
-                <div class="no-rating">
-                    <span>⭐</span>
-                    <p>Este motorista ainda não possui avaliações.</p>
-                </div>
-            {% endif %}
-        </div>
-    </section>
 
-    <!-- Avaliações dos passageiros -->
-    <section class="reviews-card">
-        <h2>Avaliações dos passageiros ({{ avaliacoes.count }})</h2>
+                {% if messages %}
+                    <div style="width: 100%; margin-bottom: 20px;">
+                        {% for message in messages %}
+                            <div class="alert {% if 'error' in message.tags or 'danger' in message.tags %}alert-danger{% else %}alert-success{% endif %}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
 
-        {% for avaliacao in avaliacoes %}
-            <article class="review-item">
-                <div class="review-header">
-                    <div>
-                        <div style="font-weight: 600; font-size: 14px; color: #333;">
-                            {% if avaliacao.avaliador %}
-                                👤 {{ avaliacao.avaliador.first_name|default:avaliacao.avaliador.username }}
-                            {% else %}
-                                👤 Usuário Anônimo
+                <div class="carona-card" style="flex-direction: column; align-items: flex-start; gap: 20px; padding: 28px;">
+                    <div class="driver-info" style="gap: 16px;">
+                        <div class="avatar-placeholder" style="width: 64px; height: 64px; font-size: 28px;">
+                            {{ motorista.username|first|upper }}
+                        </div>
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <span class="driver-name" style="font-size: 20px;">{{ motorista.username }}</span>
+                                {% if motorista.perfil.is_verificado %}
+                                    <span class="badge-verified">Verificado</span>
+                                {% endif %}
+                                {% if media_avaliacao %}
+                                    <span style="
+                                        display: inline-flex;
+                                        align-items: center;
+                                        gap: 4px;
+                                        background-color: #fffbeb;
+                                        color: #92400e;
+                                        border: 1px solid #fde68a;
+                                        border-radius: 20px;
+                                        padding: 2px 10px;
+                                        font-size: 13px;
+                                        font-weight: 700;
+                                        vertical-align: middle;
+                                    ">
+                                        ⭐ {{ media_avaliacao|floatformat:1 }}
+                                    </span>
+                                {% else %}
+                                    <span style="
+                                        display: inline-flex;
+                                        align-items: center;
+                                        gap: 4px;
+                                        background-color: #f1f5f9;
+                                        color: #64748b;
+                                        border: 1px solid #e2e8f0;
+                                        border-radius: 20px;
+                                        padding: 2px 10px;
+                                        font-size: 12px;
+                                        font-weight: 600;
+                                        vertical-align: middle;
+                                    ">
+                                        ⭐ Sem avaliações
+                                    </span>
+                                {% endif %}
+                            </div>
+                            {% if motorista.first_name or motorista.last_name %}
+                                <p style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">{{ motorista.first_name }} {{ motorista.last_name }}</p>
                             {% endif %}
                         </div>
-                        <span style="font-size: 11px; color: #888;">
-                            📅 {{ avaliacao.criado_em|date:"d/m/Y H:i" }}
-                        </span>
                     </div>
 
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <div class="review-rating">
-                            {% for estrela in "12345" %}
-                                {% if forloop.counter <= avaliacao.nota %}
-                                    ⭐
-                                {% else %}
-                                    ☆
+                    <!-- No lugar dos locais de inserção das informações: sessão dos usuários e detalhes do motorista -->
+                    <div style="width: 100%; display: flex; flex-direction: column; gap: 16px; border-top: 1px solid #eaecf0; padding-top: 20px;">
+
+                        <!-- Informações adicionais e ações do perfil -->
+                        <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; flex-direction: column; gap: 6px;">
+                                {% if motorista.perfil.telefone %}
+                                    <p class="schedule" style="margin: 0;">📞 <strong>Telefone:</strong> {{ motorista.perfil.telefone }}</p>
                                 {% endif %}
+                                <p class="schedule" style="margin: 0;">📅 <strong>Membro desde:</strong> {{ motorista.date_joined|date:"d/m/Y" }}</p>
+                            </div>
+
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                                {% if user.is_authenticated and user.id != motorista.id %}
+                                    <a href="{% url 'iniciar_chat_motorista' motorista.id %}" class="btn-primary-sm" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; height: 38px;">
+                                        💬 Conversar com motorista
+                                    </a>
+
+                                    {% if pode_avaliar %}
+                                        <button type="button" class="btn-avaliar-motorista" onclick="openModalAvaliacao()">
+                                            {% if minha_avaliacao %}
+                                                ✏️ Alterar minha avaliação ({{ minha_avaliacao.nota }}★)
+                                            {% else %}
+                                                ⭐ Avaliar este Motorista
+                                            {% endif %}
+                                        </button>
+                                    {% endif %}
+                                {% endif %}
+
+                                <a href="{% url 'index' %}" class="btn-cancel-modal" style="text-decoration: none; display: inline-flex; align-items: center; height: 38px; padding: 0 16px; box-sizing: border-box;">
+                                    ← Voltar ao Início
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Sessão / Seção dos Usuários: Avaliações -->
+                        <div class="user-reviews-section" style="margin-top: 10px; border-top: 1px solid #f1f5f9; padding-top: 18px;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #1e293b;">
+                                        Avaliações dos Usuários
+                                    </h3>
+                                    <span style="background: #e2e8f0; color: #475569; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">
+                                        {{ avaliacoes.count }}
+                                    </span>
+                                </div>
+                                {% if media_avaliacao %}
+                                    <span style="background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; border-radius: 20px; padding: 3px 12px; font-size: 13px; font-weight: 700;">
+                                        ⭐ {{ media_avaliacao|floatformat:1 }} / 5
+                                    </span>
+                                {% endif %}
+                            </div>
+
+                            {% for avaliacao in avaliacoes %}
+                                <article class="review-item" style="padding: 16px 0; border-bottom: 1px solid #f1f5f9;">
+                                    <div class="review-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                                        <div style="display: flex; align-items: center; gap: 12px;">
+                                            <div class="avatar-placeholder" style="width: 38px; height: 38px; font-size: 16px; border-radius: 50%; background-color: #2e7d32; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
+                                                {% if avaliacao.avaliador %}
+                                                    {{ avaliacao.avaliador.username|first|upper }}
+                                                {% else %}
+                                                    ?
+                                                {% endif %}
+                                            </div>
+                                            <div>
+                                                <div style="font-weight: 600; color: #222; font-size: 14px;">
+                                                    {% if avaliacao.avaliador %}
+                                                        {{ avaliacao.avaliador.first_name|default:avaliacao.avaliador.username }}
+                                                    {% else %}
+                                                        Usuário Anônimo
+                                                    {% endif %}
+                                                </div>
+                                                <span style="font-size: 11px; color: #888;">
+                                                    📅 {{ avaliacao.criado_em|date:"d/m/Y \à\s H:i" }}
+                                                    {% if avaliacao.carona %}
+                                                        &mdash; {{ avaliacao.carona }}
+                                                    {% endif %}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div style="display: flex; align-items: center; gap: 6px;">
+                                            <div class="review-rating" style="font-size: 15px;">
+                                                {% for estrela in "12345" %}
+                                                    {% if forloop.counter <= avaliacao.nota %}
+                                                        ⭐
+                                                    {% else %}
+                                                        ☆
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                            <strong style="color: #2e7d32; font-size: 13px;">{{ avaliacao.nota|floatformat:1 }}/5</strong>
+                                        </div>
+                                    </div>
+
+                                    {% if avaliacao.comentario %}
+                                        <p class="review-comment" style="margin-top: 10px; font-size: 13px; color: #444; background: #f8fafc; padding: 10px 14px; border-radius: 8px; border-left: 3px solid #2e7d32;">
+                                            &ldquo;{{ avaliacao.comentario }}&rdquo;
+                                        </p>
+                                    {% endif %}
+                                </article>
+                            {% empty %}
+                                <div style="text-align: center; padding: 36px 16px; color: #64748b;">
+                                    <div style="font-size: 32px; margin-bottom: 8px;">⭐</div>
+                                    <p style="margin: 0; font-size: 14px;">Nenhuma avaliação foi registrada por usuários para este motorista ainda.</p>
+                                </div>
                             {% endfor %}
                         </div>
-                        <strong>{{ avaliacao.nota|floatformat:1 }}/5</strong>
+
                     </div>
                 </div>
 
-                {% if avaliacao.comentario %}
-                    <p class="review-comment">
-                        "{{ avaliacao.comentario }}"
-                    </p>
-                {% endif %}
-            </article>
-        {% empty %}
-            <div class="empty-reviews">
-                <span>⭐</span>
-                <p>Nenhuma avaliação foi registrada para este motorista.</p>
-            </div>
-        {% endfor %}
-    </section>
+            </section>
+        </main>
+    </div>
 
-</main>
+</div>
 
 <!-- MODAL DE AVALIAÇÃO DO MOTORISTA -->
 <div id="modal-avaliacao" class="modal-overlay">
@@ -275,23 +443,23 @@
     function openModalAvaliacao() {
         const modal = document.getElementById('modal-avaliacao');
         if (modal) {
-            modal.classList.add('active');
+            modal.style.display = 'flex';
         }
     }
 
     function closeModalAvaliacao() {
         const modal = document.getElementById('modal-avaliacao');
         if (modal) {
-            modal.classList.remove('active');
+            modal.style.display = 'none';
         }
     }
 
-    window.addEventListener('click', function(event) {
+    window.onclick = function(event) {
         const modal = document.getElementById('modal-avaliacao');
-        if (event.target === modal) {
+        if (event.target === modal || event.target.classList.contains('modal-overlay')) {
             closeModalAvaliacao();
         }
-    });
+    }
 
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Escape') {
