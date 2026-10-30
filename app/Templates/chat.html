@@ -193,85 +193,63 @@
 <div class="app-container">
 
 
-<aside class="sidebar">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <h2>Caronas IF</h2>
+        </div>
 
-    <div class="sidebar-brand">
-        <h2>Caronas IF</h2>
-    </div>
+        <nav class="sidebar-menu">
+            <a href="{% url 'index' %}" class="menu-item">Início</a>
+            <a href="{% url 'minhas_caronas' %}" class="menu-item">Minhas Caronas</a>
+            <a href="{% url 'chats' %}" class="menu-item active">Mensagens</a>
+            <a href="{% url 'avaliacoes' %}" class="menu-item">Avaliações</a>
+            {% if not contexto_motorista and request.user.is_authenticated %}
+                <a href="{% url 'verificacao_cnh' %}" class="menu-item">Verificação de CNH</a>
+            {% endif %}
+        </nav>
 
-    <nav class="sidebar-menu">
+        <div class="sidebar-footer">
+            {% if request.user.is_staff or request.user.is_superuser %}
+                <a href="{% url 'gerenciar_solicitacoes_cnh' %}" class="menu-item">
+                    Aprovar Motoristas
+                </a>
+            {% endif %}
 
-        <a href="{% url 'index' %}" class="menu-item">
-            Início
-        </a>
+            {% if request.user.is_staff %}
+                <a href="{% url 'admin:index' %}" class="menu-item" target="_blank">
+                    Administração
+                </a>
+            {% endif %}
 
-        <a href="{% url 'caronas' %}" class="menu-item">
-            Minhas Caronas
-        </a>
-
-        <a href="{% url 'chats' %}" class="menu-item active" title="Mensagens"> 
-            Mensagens
-        </a>
-
-        {% if contexto_motorista %}
-            <a href="{% url 'criar_carona' %}" class="menu-item">
-                Cadastrar Carona
-            </a>
-        {% elif request.user.is_authenticated %}
-            <a href="{% url 'verificacao_cnh' %}" class="menu-item">
-                Verificação de CNH
-            </a>
-        {% endif %}
-
-    </nav>
-
-    <div class="sidebar-footer">
-
-        {% if request.user.is_staff or request.user.is_superuser %}
-            <a href="{% url 'gerenciar_solicitacoes_cnh' %}"
-            class="menu-item">
-                Aprovar Motoristas
-            </a>
-        {% endif %}
-
-        <a href="{% url 'perfil' %}" class="menu-item">
-            Perfil
-        </a>
-
-        <form method="post" action="{% url 'logout' %}" class="logout-form">
-
-            {% csrf_token %}
-
-            <button type="submit" class="menu-item btn-logout">
-                Sair
-            </button>
-
-        </form>
-
-    </div>
-
-</aside>
+            <form action="{% url 'logout' %}" method="post" class="logout-form">
+                {% csrf_token %}
+                <button type="submit" class="menu-item btn-logout">
+                    Sair
+                </button>
+            </form>
+        </div>
+    </aside>
 
 
 <div class="main-wrapper">
 
-    <header class="top-header">
-
-        <div>
-            <strong>Mensagens</strong>
-        </div>
-
-        <div class="user-profile">
-
-            <a href="{% url 'perfil' %}"
-               class="menu-item"
-               style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600;">
-                👤 {{ request.user.username }}
-            </a>
-        
-        </div>
-
-    </header>
+            <header class="top-header">
+            <div></div>
+            <div class="user-profile">
+                <a href="{% url 'chats' %}" class="navbar-messages" title="Mensagens" aria-label="Mensagens">
+                    <svg class="message-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5 c-1.1 0-2.15-.24-3.1-.67 L4 20l1.67-4.02 A7.47 7.47 0 0 1 5 11.5 a7.5 7.5 0 1 1 15 0Z"
+                              fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                    <span id="messageNotification" class="message-notification" {% if not conversas_com_mensagens_novas or conversas_com_mensagens_novas == 0 %}style="display: none;"{% endif %}>
+                        {% if conversas_com_mensagens_novas %}{{ conversas_com_mensagens_novas }}{% endif %}
+                    </span>
+                </a>
+                <a href="{% url 'perfil' %}" class="menu-item" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600;">
+                    {{ request.user.username }}
+                </a>
+            </div>
+        </header>
 
 
     <main class="chat-content">
@@ -302,7 +280,7 @@
                             Todas
                         </button>
                         <button type="button" id="btnExcluirSelecionadas" class="btn-excluir-chat-icon" disabled>
-                            🗑️ Excluir
+                            Excluir
                         </button>
                     </div>
                 </div>
@@ -346,11 +324,11 @@
 
                                         <div class="chat-item-badges" style="display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;">
                                             {% if item.solicitacao_status == 'aceita' %}
-                                                <span class="badge-chat-status badge-chat-aceita" title="Carona Aceita">✅ Aceita</span>
+                                                <span class="badge-chat-status badge-chat-aceita" title="Carona Aceita">Aceita</span>
                                             {% elif item.solicitacao_status == 'recusada' %}
-                                                <span class="badge-chat-status badge-chat-recusada" title="Carona Recusada">❌ Recusada</span>
+                                                <span class="badge-chat-status badge-chat-recusada" title="Carona Recusada">Recusada</span>
                                             {% elif item.solicitacao_status == 'pendente' %}
-                                                <span class="badge-chat-status badge-chat-pendente" title="Solicitação Pendente">⏳ Pendente</span>
+                                                <span class="badge-chat-status badge-chat-pendente" title="Solicitação Pendente">Pendente</span>
                                             {% endif %}
 
                                             {% if item.mensagens_nao_lidas > 0 %}
@@ -499,12 +477,12 @@
                     <div class="solicitacao-chat-wrapper" id="solicitacaoCaronaWrapper">
                         <div class="solicitacao-chat-header" style="flex-wrap: wrap; gap: 8px;">
                             <span class="solicitacao-chat-title">
-                                🚗 Carona: {{ conversa.carona.origem }} ➔ {{ conversa.carona.destino }} (R$ {{ conversa.carona.valor }})
+                                Carona: {{ conversa.carona.origem }} ➔ {{ conversa.carona.destino }} (R$ {{ conversa.carona.valor }})
                             </span>
                             <div style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
                                 {% if conversa.carona.status == 'encerrada' %}
                                     <span style="background: #e2e8f0; color: #475569; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">
-                                        🏁 Carona Encerrada
+                                        Carona Encerrada
                                     </span>
                                 {% else %}
                                     <span class="solicitacao-chat-vagas" id="solicitacaoVagasInfo">
@@ -515,7 +493,7 @@
                                               onsubmit="return confirm('Deseja encerrar esta carona? As vagas restantes serão fechadas e os passageiros poderão avaliar a viagem.');">
                                             {% csrf_token %}
                                             <button type="submit" class="btn-primary-sm" style="background-color: #dc2626; border-color: #dc2626; padding: 4px 10px; font-size: 12px; cursor: pointer;">
-                                                🏁 Encerrar Carona
+                                                Encerrar Carona
                                             </button>
                                         </form>
                                     {% endif %}
@@ -528,37 +506,37 @@
                                 {% if not solicitacao %}
                                     {% if conversa.carona.status == "encerrada" %}
                                         <div class="status-badge-recusada">
-                                            🏁 Esta carona já foi encerrada pelo motorista.
+                                            Esta carona já foi encerrada pelo motorista.
                                         </div>
                                     {% elif conversa.carona.vagas > 0 %}
                                         <button type="button" class="btn-solicitar-chat" id="btnSolicitarVagaChat">
-                                            🙋 Solicitar Vaga nesta Carona
+                                            Solicitar Vaga nesta Carona
                                         </button>
                                     {% else %}
                                         <div class="status-badge-recusada">
-                                            ⚠️ Não há mais vagas disponíveis nesta carona.
+                                            Não há mais vagas disponíveis nesta carona.
                                         </div>
                                     {% endif %}
                                 {% elif solicitacao.status == "pendente" %}
                                     <div class="status-badge-pendente">
-                                        ⏳ Solicitação enviada! Aguardando confirmação do motorista {{ conversa.carona.motorista.username }}.
+                                        Solicitação enviada! Aguardando confirmação do motorista {{ conversa.carona.motorista.username }}.
                                     </div>
                                 {% elif solicitacao.status == "aceita" %}
                                     {% if conversa.carona.status == "encerrada" %}
                                         <div class="status-badge-aceita" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
-                                            <span>🏁 A carona foi concluída e encerrada pelo motorista!</span>
+                                            <span>A carona foi concluída e encerrada pelo motorista!</span>
                                             <button type="button" class="btn-primary-sm" onclick="openModalAvaliacaoChat()" style="background-color: #f59e0b; border-color: #f59e0b; color: #fff; font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 6px; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 4px;">
-                                                ⭐ Avaliar Motorista
+                                                Avaliar Motorista
                                             </button>
                                         </div>
                                     {% else %}
                                         <div class="status-badge-aceita">
-                                            ✅ Sua solicitação foi aceita! Vaga confirmada com o motorista. (A avaliação será liberada após o motorista encerrar a carona).
+                                            Sua solicitação foi aceita! Vaga confirmada com o motorista. (A avaliação será liberada após o motorista encerrar a carona).
                                         </div>
                                     {% endif %}
                                 {% elif solicitacao.status == "recusada" %}
                                     <div class="status-badge-recusada">
-                                        <div>❌ Sua solicitação foi recusada pelo motorista.</div>
+                                        <div>Sua solicitação foi recusada pelo motorista.</div>
                                         {% if solicitacao.motivo_recusa %}
                                             <div style="margin-top: 4px; font-size: 12px; font-weight: normal; opacity: 0.95;">
                                                 <strong>Motivo informado:</strong> {{ solicitacao.motivo_recusa }}
@@ -570,30 +548,30 @@
                                 {% if solicitacao and solicitacao.status == "pendente" %}
                                     <div class="motorista-solicitacao-card" id="cardSolicitacaoMotorista" data-id="{{ solicitacao.id }}">
                                         <div class="motorista-solicitacao-text">
-                                            🙋 <strong>{{ solicitacao.passageiro.username }}</strong> solicitou 1 vaga nesta carona.
+                                            <strong>{{ solicitacao.passageiro.username }}</strong> solicitou 1 vaga nesta carona.
                                         </div>
                                         <div class="motorista-solicitacao-actions">
                                             <button type="button" class="btn-aceitar-solicitacao" id="btnAceitarSolicitacao" data-id="{{ solicitacao.id }}">
-                                                ✅ Aceitar Solicitação ({{ conversa.carona.vagas }} vagas)
+                                                Aceitar Solicitação ({{ conversa.carona.vagas }} vagas)
                                             </button>
                                             <button type="button" class="btn-recusar-solicitacao" id="btnRecusarSolicitacao" data-id="{{ solicitacao.id }}">
-                                                ❌ Recusar
+                                                Recusar
                                             </button>
                                         </div>
                                     </div>
                                 {% elif solicitacao and solicitacao.status == "aceita" %}
                                     {% if conversa.carona.status == "encerrada" %}
                                         <div class="status-badge-aceita">
-                                            🏁 Você encerrou esta carona. As avaliações de {{ solicitacao.passageiro.username }} foram liberadas.
+                                            Você encerrou esta carona. As avaliações de {{ solicitacao.passageiro.username }} foram liberadas.
                                         </div>
                                     {% else %}
                                         <div class="status-badge-aceita">
-                                            ✅ Você aceitou a solicitação de {{ solicitacao.passageiro.username }}. Vagas restantes: {{ conversa.carona.vagas }}.
+                                            Você aceitou a solicitação de {{ solicitacao.passageiro.username }}. Vagas restantes: {{ conversa.carona.vagas }}.
                                         </div>
                                     {% endif %}
                                 {% elif solicitacao and solicitacao.status == "recusada" %}
                                     <div class="status-badge-recusada">
-                                        <div>❌ Você recusou a solicitação de {{ solicitacao.passageiro.username }}.</div>
+                                        <div>Você recusou a solicitação de {{ solicitacao.passageiro.username }}.</div>
                                         {% if solicitacao.motivo_recusa %}
                                             <div style="margin-top: 4px; font-size: 12px; font-weight: normal; opacity: 0.95;">
                                                 <strong>Motivo informado:</strong> {{ solicitacao.motivo_recusa }}
@@ -878,7 +856,7 @@
                     })
                 );
 
-            const emptyMessage =
+            let emptyMessage =
                 document.getElementById(
                     "emptyMessages"
                 );
@@ -949,7 +927,6 @@
         const wrapper = document.getElementById("solicitacaoCaronaWrapper");
         if (!wrapper) return;
 
-        const sol = data.solicitacao;
         const ehMotorista = data.eh_motorista;
         const vagas = data.vagas;
         const caronaStatus = data.carona_status;
@@ -968,7 +945,7 @@
             if (caronaStatus === "encerrada") {
                 body.innerHTML = `
                     <div class="status-badge-aceita">
-                        🏁 Você encerrou esta carona.
+                        Você encerrou esta carona.
                     </div>
                 `;
                 return;
@@ -979,14 +956,14 @@
                     body.innerHTML = `
                         <div class="motorista-solicitacao-card" id="cardSolicitacaoMotorista" data-id="${sol.id}">
                             <div class="motorista-solicitacao-text">
-                                🙋 <strong>${sol.passageiro}</strong> solicitou 1 vaga nesta carona.
+                                <strong>${sol.passageiro}</strong> solicitou 1 vaga nesta carona.
                             </div>
                             <div class="motorista-solicitacao-actions">
                                 <button type="button" class="btn-aceitar-solicitacao" id="btnAceitarSolicitacao" data-id="${sol.id}">
-                                    ✅ Aceitar Solicitação (${vagas} vagas)
+                                    Aceitar Solicitação (${vagas} vagas)
                                 </button>
                                 <button type="button" class="btn-recusar-solicitacao" id="btnRecusarSolicitacao" data-id="${sol.id}">
-                                    ❌ Recusar
+                                    Recusar
                                 </button>
                             </div>
                         </div>
@@ -996,14 +973,14 @@
             } else if (sol && sol.status === "aceita") {
                 body.innerHTML = `
                     <div class="status-badge-aceita">
-                        ✅ Você aceitou a solicitação de ${escapeHtml(sol.passageiro)}. Vagas restantes: ${vagas}.
+                        Você aceitou a solicitação de ${escapeHtml(sol.passageiro)}. Vagas restantes: ${vagas}.
                     </div>
                 `;
             } else if (sol && sol.status === "recusada") {
                 const motivoHtml = sol.motivo_recusa ? `<div style="margin-top: 4px; font-size: 12px; font-weight: normal; opacity: 0.95;"><strong>Motivo informado:</strong> ${escapeHtml(sol.motivo_recusa)}</div>` : '';
                 body.innerHTML = `
                     <div class="status-badge-recusada">
-                        <div>❌ Você recusou a solicitação de ${escapeHtml(sol.passageiro)}.</div>
+                        <div>Você recusou a solicitação de ${escapeHtml(sol.passageiro)}.</div>
                         ${motivoHtml}
                     </div>
                 `;
@@ -1014,7 +991,7 @@
                 if (caronaStatus === "encerrada") {
                     body.innerHTML = `
                         <div class="status-badge-recusada">
-                            🏁 Esta carona já foi encerrada pelo motorista.
+                            Esta carona já foi encerrada pelo motorista.
                         </div>
                     `;
                     return;
@@ -1023,7 +1000,7 @@
                     if (!document.getElementById("btnSolicitarVagaChat")) {
                         body.innerHTML = `
                             <button type="button" class="btn-solicitar-chat" id="btnSolicitarVagaChat">
-                                🙋 Solicitar Vaga nesta Carona
+                                Solicitar Vaga nesta Carona
                             </button>
                         `;
                         vincularBotaoSolicitarPassageiro();
@@ -1031,14 +1008,14 @@
                 } else {
                     body.innerHTML = `
                         <div class="status-badge-recusada">
-                            ⚠️ Não há mais vagas disponíveis nesta carona.
+                            Não há mais vagas disponíveis nesta carona.
                         </div>
                     `;
                 }
             } else if (sol.status === "pendente") {
                 body.innerHTML = `
                     <div class="status-badge-pendente">
-                        ⏳ Solicitação enviada! Aguardando confirmação do motorista.
+                        Solicitação enviada! Aguardando confirmação do motorista.
                     </div>
                 `;
             } else if (sol.status === "aceita") {
@@ -1049,9 +1026,9 @@
                         // Mantém o botão de avaliar motorista fixo no card do chat
                         body.innerHTML = `
                             <div class="status-badge-aceita" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
-                                <span>🏁 A carona foi concluída e encerrada pelo motorista!</span>
+                                <span>A carona foi concluída e encerrada pelo motorista!</span>
                                 <button type="button" class="btn-primary-sm" onclick="openModalAvaliacaoChat()" style="background-color: #f59e0b; border-color: #f59e0b; color: #fff; font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 6px; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 4px;">
-                                    ⭐ Avaliar Motorista
+                                    Avaliar Motorista
                                 </button>
                             </div>
                         `;
@@ -1059,7 +1036,7 @@
                 } else {
                     body.innerHTML = `
                         <div class="status-badge-aceita">
-                            ✅ Sua solicitação foi aceita! Vaga confirmada com o motorista. (A avaliação será liberada após o motorista encerrar a carona).
+                            Sua solicitação foi aceita! Vaga confirmada com o motorista. (A avaliação será liberada após o motorista encerrar a carona).
                         </div>
                     `;
                 }
@@ -1067,7 +1044,7 @@
                 const motivoHtml = sol.motivo_recusa ? `<div style="margin-top: 4px; font-size: 12px; font-weight: normal; opacity: 0.95;"><strong>Motivo informado:</strong> ${escapeHtml(sol.motivo_recusa)}</div>` : '';
                 body.innerHTML = `
                     <div class="status-badge-recusada">
-                        <div>❌ Sua solicitação foi recusada pelo motorista.</div>
+                        <div>Sua solicitação foi recusada pelo motorista.</div>
                         ${motivoHtml}
                     </div>
                 `;
@@ -1100,7 +1077,7 @@
                     if (body) {
                         body.innerHTML = `
                             <div class="status-badge-pendente">
-                                ⏳ Solicitação enviada! Aguardando confirmação do motorista.
+                                Solicitação enviada! Aguardando confirmação do motorista.
                             </div>
                         `;
                     }
@@ -1108,14 +1085,14 @@
                 } else {
                     alert(resData.erro || "Erro ao solicitar vaga.");
                     btn.disabled = false;
-                    btn.textContent = "🙋 Solicitar Vaga nesta Carona";
+                    btn.textContent = "Solicitar Vaga nesta Carona";
                 }
             })
             .catch(function(err) {
                 console.error(err);
                 alert("Erro de conexão ao solicitar vaga.");
                 btn.disabled = false;
-                btn.textContent = "🙋 Solicitar Vaga nesta Carona";
+                btn.textContent = "Solicitar Vaga nesta Carona";
             });
         });
     }
@@ -1156,19 +1133,19 @@
             const badge = document.createElement("span");
             badge.className = "badge-chat-status badge-chat-aceita";
             badge.title = "Carona Aceita";
-            badge.innerHTML = "✅ Aceita";
+            badge.innerHTML = "Aceita";
             badgesContainer.prepend(badge);
         } else if (status === "recusada") {
             const badge = document.createElement("span");
             badge.className = "badge-chat-status badge-chat-recusada";
             badge.title = "Carona Recusada";
-            badge.innerHTML = "❌ Recusada";
+            badge.innerHTML = "Recusada";
             badgesContainer.prepend(badge);
         } else if (status === "pendente") {
             const badge = document.createElement("span");
             badge.className = "badge-chat-status badge-chat-pendente";
             badge.title = "Solicitação Pendente";
-            badge.innerHTML = "⏳ Pendente";
+            badge.innerHTML = "Pendente";
             badgesContainer.prepend(badge);
         }
     }
@@ -1222,7 +1199,7 @@
             }
             if (btnSubmit) {
                 btnSubmit.disabled = false;
-                btnSubmit.textContent = "❌ Confirmar Recusa";
+                btnSubmit.textContent = "Confirmar Recusa";
             }
         });
     }
@@ -1278,7 +1255,7 @@
                     const motivoHtml = resData.motivo_recusa ? `<div style="margin-top: 4px; font-size: 12px; font-weight: normal; opacity: 0.95;"><strong>Motivo informado:</strong> ${escapeHtml(resData.motivo_recusa)}</div>` : '';
                     body.innerHTML = `
                         <div class="status-badge-recusada">
-                            <div>❌ Você recusou a solicitação de vaga.</div>
+                            <div>Você recusou a solicitação de vaga.</div>
                             ${motivoHtml}
                         </div>
                     `;
@@ -1337,7 +1314,9 @@
                     method: "POST",
 
                     headers: {
-                        "X-CSRFToken": csrfToken
+                        "X-CSRFToken": csrfToken,
+                        "X-Requested-With": "XMLHttpRequest",
+                        "Accept": "application/json"
                     },
 
                     body: formData
@@ -1570,7 +1549,7 @@
     <div class="modal-content" style="max-width: 480px;">
         <div class="modal-header">
             <h3 style="color: #dc2626; display: flex; align-items: center; gap: 8px;">
-                <span>❌</span> Recusar Solicitação
+                Recusar Solicitação
             </h3>
             <button type="button" class="btn-close-modal" onclick="closeModalRecusaSolicitacao()">✕</button>
         </div>
@@ -1594,7 +1573,7 @@
                     Cancelar
                 </button>
                 <button type="button" id="btnConfirmarRecusa" onclick="confirmarRecusaSolicitacao()" class="btn-primary" style="margin-top: 0; width: auto; background-color: #dc2626; border-color: #dc2626; cursor: pointer;">
-                    ❌ Confirmar Recusa
+                    Confirmar Recusa
                 </button>
             </div>
         </form>
@@ -1763,14 +1742,14 @@
                     } else {
                         alert(data.erro || "Erro ao excluir conversas.");
                         btnExcluir.disabled = false;
-                        btnExcluir.textContent = "🗑️ Excluir";
+                        btnExcluir.textContent = "Excluir";
                     }
                 })
                 .catch(err => {
                     console.error("Erro ao excluir conversas:", err);
                     alert("Erro ao excluir conversas.");
                     btnExcluir.disabled = false;
-                    btnExcluir.textContent = "🗑️ Excluir";
+                    btnExcluir.textContent = "Excluir";
                 });
             });
         }

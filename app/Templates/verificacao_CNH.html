@@ -10,128 +10,176 @@
     <title>Verificação de CNH - Caronas IF</title>
 
     <link rel="stylesheet" href="{% static 'css/style.css' %}?v=20261023_v4">
+
+    <style>
+        /* ── Upload de CNH ── */
+        .cnh-upload-area {
+            border: 2px dashed #4caf50;
+            border-radius: 12px;
+            padding: 32px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+            position: relative;
+            background: #f9fffe;
+        }
+
+        .cnh-upload-area:hover,
+        .cnh-upload-area.dragover {
+            background: #e8f5e9;
+            border-color: #2e7d32;
+        }
+
+        .cnh-upload-area input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+
+        .cnh-upload-icon {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .cnh-upload-label {
+            font-weight: 600;
+            color: #2e7d32;
+        }
+
+        .cnh-upload-hint {
+            font-size: 13px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .cnh-preview-wrap {
+            margin-top: 14px;
+        }
+
+        .cnh-preview-wrap img {
+            max-width: 100%;
+            max-height: 220px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            object-fit: contain;
+        }
+
+        .cnh-preview-name {
+            font-size: 13px;
+            color: #444;
+            margin-top: 6px;
+        }
+
+        /* ── Termos de Uso ── */
+        .termos-box {
+            background: #fffde7;
+            border: 1px solid #f9a825;
+            border-radius: 10px;
+            padding: 20px 22px;
+            margin-top: 20px;
+        }
+
+        .termos-box h4 {
+            margin: 0 0 10px;
+            color: #e65100;
+            font-size: 15px;
+        }
+
+        .termos-scroll {
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 13px;
+            color: #555;
+            line-height: 1.65;
+            padding-right: 6px;
+            margin-bottom: 14px;
+        }
+
+        .termos-scroll p {
+            margin: 0 0 10px;
+        }
+
+        .termos-aceite {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 13.5px;
+        }
+
+        .termos-aceite input[type="checkbox"] {
+            margin-top: 3px;
+            width: 17px;
+            height: 17px;
+            flex-shrink: 0;
+            accent-color: #2e7d32;
+        }
+    </style>
 </head>
 
 <body>
 
 <div class="app-container">
 
-    <aside class="sidebar">
-
+        <aside class="sidebar">
         <div class="sidebar-brand">
             <h2>Caronas IF</h2>
         </div>
 
         <nav class="sidebar-menu">
-
-            <a href="{% url 'index' %}" class="menu-item">
-                Início
-            </a>
-
-            <a href="{% url 'minhas_caronas' %}" class="menu-item">
-                Minhas Caronas
-            </a>
-
-            <a href="{% url 'chats' %}" class="menu-item">
-                Mensagens
-            </a>
-
-            {% if contexto_motorista %}
-                <a href="{% url 'criar_carona' %}" class="menu-item">
-                    Cadastrar Carona
-                </a>
-            {% elif request.user.is_authenticated %}
-                <a href="{% url 'verificacao_cnh' %}" class="menu-item active">
-                    Verificação de CNH
-                </a>
+            <a href="{% url 'index' %}" class="menu-item">Início</a>
+            <a href="{% url 'minhas_caronas' %}" class="menu-item">Minhas Caronas</a>
+            <a href="{% url 'chats' %}" class="menu-item">Mensagens</a>
+            <a href="{% url 'avaliacoes' %}" class="menu-item">Avaliações</a>
+            {% if not contexto_motorista and request.user.is_authenticated %}
+                <a href="{% url 'verificacao_cnh' %}" class="menu-item active">Verificação de CNH</a>
             {% endif %}
-
         </nav>
 
         <div class="sidebar-footer">
-
             {% if request.user.is_staff or request.user.is_superuser %}
-            <a href="{% url 'gerenciar_solicitacoes_cnh' %}"
-            class="menu-item">
-                Aprovar Motoristas
-            </a>
-        {% endif %}
+                <a href="{% url 'gerenciar_solicitacoes_cnh' %}" class="menu-item">
+                    Aprovar Motoristas
+                </a>
+            {% endif %}
 
             {% if request.user.is_staff %}
-                <a href="{% url 'admin:index' %}"
-                   class="menu-item"
-                   target="_blank">
+                <a href="{% url 'admin:index' %}" class="menu-item" target="_blank">
                     Administração
                 </a>
             {% endif %}
 
-            <form action="{% url 'logout' %}"
-                  method="post"
-                  class="logout-form">
-
+            <form action="{% url 'logout' %}" method="post" class="logout-form">
                 {% csrf_token %}
-
                 <button type="submit" class="menu-item btn-logout">
                     Sair
                 </button>
-
             </form>
-
         </div>
-
     </aside>
 
 
     <div class="main-wrapper">
 
-        <header class="top-header">
-
+                <header class="top-header">
             <div></div>
-
             <div class="user-profile">
-
-                <a href="{% url 'chats' %}"
-                   class="navbar-messages"
-                   title="Mensagens"
-                   aria-label="Mensagens">
-
-                    <svg class="message-icon"
-                         viewBox="0 0 24 24"
-                         aria-hidden="true">
-
-                        <path
-                            d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5
-                               c-1.1 0-2.15-.24-3.1-.67
-                               L4 20l1.67-4.02
-                               A7.47 7.47 0 0 1 5 11.5
-                               a7.5 7.5 0 1 1 15 0Z"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                            stroke-linecap="round"
-                            stroke-linejoin="round">
-                        </path>
-
+                <a href="{% url 'chats' %}" class="navbar-messages" title="Mensagens" aria-label="Mensagens">
+                    <svg class="message-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5 c-1.1 0-2.15-.24-3.1-.67 L4 20l1.67-4.02 A7.47 7.47 0 0 1 5 11.5 a7.5 7.5 0 1 1 15 0Z"
+                              fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
                     </svg>
-
-                    {% if conversas_com_mensagens_novas > 0 %}
-                        <span class="message-notification">
-                            {{ conversas_com_mensagens_novas }}
-                        </span>
-                    {% endif %}
-
+                    <span id="messageNotification" class="message-notification" {% if not conversas_com_mensagens_novas or conversas_com_mensagens_novas == 0 %}style="display: none;"{% endif %}>
+                        {% if conversas_com_mensagens_novas %}{{ conversas_com_mensagens_novas }}{% endif %}
+                    </span>
                 </a>
-
-                <a href="{% url 'perfil' %}"
-                   class="menu-item"
-                   style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600;">
-
-                    👤 {{ request.user.username }}
-
+                <a href="{% url 'perfil' %}" class="menu-item" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600;">
+                    {{ request.user.username }}
                 </a>
-
             </div>
-
         </header>
 
 
@@ -223,7 +271,8 @@
                             </h2>
 
                             <p>
-                                Seus dados foram salvos. Sua solicitação
+                                Seus dados e a foto da sua CNH foram
+                                enviados com sucesso. Sua solicitação
                                 está aguardando análise administrativa.
                             </p>
 
@@ -253,24 +302,6 @@
 
                             </div>
 
-                            <div class="email-contato">
-
-                                <h3>
-                                    Finalize a verificação da CNH
-                                </h3>
-
-                                <p>
-                                    Envie uma foto da sua carteira de
-                                    habilitação para o endereço abaixo,
-                                    conforme o procedimento de verificação.
-                                </p>
-
-                                <strong>
-                                    contato.caronasif@gmail.com
-                                </strong>
-
-                            </div>
-
                             <p>
                                 O envio dos dados não significa aprovação
                                 automática. Aguarde a análise do administrador.
@@ -286,6 +317,7 @@
                     <div class="verificacao-card">
 
                         <form method="post"
+                              enctype="multipart/form-data"
                               class="form-verificacao">
 
                             {% csrf_token %}
@@ -361,19 +393,117 @@
                             </div>
 
 
-                            <div class="form-aviso">
+                            <!-- ── Upload da foto da CNH ── -->
+                            <div class="form-group">
+
+                                <label>
+                                    Foto da CNH <span style="color:#c62828;">*</span>
+                                </label>
+
+                                <div class="cnh-upload-area"
+                                     id="uploadArea"
+                                     role="button"
+                                     aria-label="Área de envio da foto da CNH">
+
+                                    <input
+                                        type="file"
+                                        id="foto_cnh"
+                                        name="foto_cnh"
+                                        accept="image/jpeg,image/png,image/webp"
+                                        required
+                                        aria-label="Selecionar foto da CNH">
+
+                                    <span class="cnh-upload-icon" style="font-size:1.8rem; display:block; margin-bottom:8px;">Upload</span>
+                                    <span class="cnh-upload-label">
+                                        Clique ou arraste a foto da sua CNH aqui
+                                    </span>
+                                    <p class="cnh-upload-hint">
+                                        Formatos aceitos: JPEG, PNG ou WebP &nbsp;·&nbsp; Tamanho máximo: 10 MB
+                                    </p>
+
+                                </div>
+
+                                <div class="cnh-preview-wrap" id="previewWrap" style="display:none;">
+                                    <img id="previewImg" src="#" alt="Pré-visualização da CNH">
+                                    <p class="cnh-preview-name" id="previewName"></p>
+                                </div>
+
+                            </div>
+
+
+                            <!-- ── Termos de Uso e Responsabilidade ── -->
+                            <div class="termos-box">
+
+                                <h4>Termos de Uso e Responsabilidade — Compartilhamento de CNH</h4>
+
+                                <div class="termos-scroll">
+                                    <p>
+                                        Ao enviar a foto da sua Carteira Nacional de Habilitação (CNH) pela plataforma
+                                        <strong>Caronas IF</strong>, você declara ter lido, compreendido e concordado
+                                        integralmente com os termos abaixo:
+                                    </p>
+                                    <p>
+                                        <strong>1. Finalidade do envio.</strong>
+                                        A imagem da CNH é coletada exclusivamente para fins de verificação da habilitação
+                                        do motorista no âmbito do sistema Caronas IF. O documento será analisado por
+                                        administradores da plataforma e não será utilizado para nenhuma outra finalidade.
+                                    </p>
+                                    <p>
+                                        <strong>2. Veracidade das informações.</strong>
+                                        Você declara que a CNH enviada é autêntica, válida e pertence a você. O envio
+                                        de documento falso, adulterado ou de terceiros é expressamente proibido e sujeito
+                                        às sanções previstas na legislação brasileira (Lei nº 7.115/1983 e Código Penal,
+                                        art. 297).
+                                    </p>
+                                    <p>
+                                        <strong>3. Armazenamento e proteção de dados.</strong>
+                                        A imagem será armazenada de forma segura nos servidores da plataforma, com acesso
+                                        restrito exclusivamente aos administradores. Após a análise, a imagem poderá ser
+                                        mantida como registro da verificação.
+                                    </p>
+                                    <p>
+                                        <strong>4. Base legal (LGPD).</strong>
+                                        O tratamento dos dados pessoais sensíveis contidos na CNH é realizado com base
+                                        no consentimento explícito do titular (art. 11, I da Lei nº 13.709/2018 — LGPD).
+                                        Você pode solicitar a exclusão do documento a qualquer momento pelo e-mail
+                                        contato.caronasif@gmail.com, desde que a conta não esteja ativa como motorista.
+                                    </p>
+                                    <p>
+                                        <strong>5. Responsabilidade do usuário.</strong>
+                                        Você é inteiramente responsável pela autenticidade e precisão dos dados
+                                        fornecidos. A plataforma Caronas IF não se responsabiliza por danos decorrentes
+                                        do envio de informações incorretas ou documentos inválidos.
+                                    </p>
+                                    <p>
+                                        <strong>6. Revogação do consentimento.</strong>
+                                        A revogação do consentimento implica a impossibilidade de manutenção do perfil
+                                        de motorista verificado na plataforma, podendo resultar no cancelamento das
+                                        funcionalidades de motorista.
+                                    </p>
+                                </div>
+
+                                <div class="termos-aceite">
+                                    <input
+                                        type="checkbox"
+                                        id="aceite_termos"
+                                        name="aceite_termos"
+                                        required>
+                                    <label for="aceite_termos">
+                                        Li e concordo com os <strong>Termos de Uso e Responsabilidade</strong>
+                                        acima, e autorizo o compartilhamento da minha CNH com os administradores
+                                        da plataforma Caronas IF para fins de verificação.
+                                    </label>
+                                </div>
+
+                            </div>
+
+
+                            <div class="form-aviso" style="margin-top: 20px;">
 
                                 <p>
-                                    Após enviar seus dados, sua solicitação
-                                    será registrada para análise.
-                                </p>
-
-                                <p>
-                                    Para concluir a verificação, entre em
-                                    contato pelo e-mail
-                                    <strong>contato.caronasif@gmail.com</strong>
-                                    e siga as orientações para apresentar
-                                    sua CNH.
+                                    Após o envio, sua solicitação ficará
+                                    aguardando análise administrativa.
+                                    A aprovação não é automática.
                                 </p>
 
                             </div>
@@ -396,6 +526,58 @@
     </div>
 
 </div>
+
+<script>
+    (function () {
+        const input = document.getElementById('foto_cnh');
+        const area = document.getElementById('uploadArea');
+        const previewWrap = document.getElementById('previewWrap');
+        const previewImg = document.getElementById('previewImg');
+        const previewName = document.getElementById('previewName');
+
+        if (!input) return;
+
+        function showPreview(file) {
+            if (!file || !file.type.startsWith('image/')) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                previewImg.src = e.target.result;
+                previewName.textContent = file.name + ' (' + (file.size / 1024).toFixed(0) + ' KB)';
+                previewWrap.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        input.addEventListener('change', function () {
+            if (this.files && this.files[0]) {
+                showPreview(this.files[0]);
+            }
+        });
+
+        // Drag-and-drop visual feedback
+        area.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            area.classList.add('dragover');
+        });
+
+        area.addEventListener('dragleave', function () {
+            area.classList.remove('dragover');
+        });
+
+        area.addEventListener('drop', function (e) {
+            e.preventDefault();
+            area.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files && files[0]) {
+                // Assign to input
+                const dt = new DataTransfer();
+                dt.items.add(files[0]);
+                input.files = dt.files;
+                showPreview(files[0]);
+            }
+        });
+    })();
+</script>
 
 </body>
 </html>

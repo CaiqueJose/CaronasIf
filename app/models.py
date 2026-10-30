@@ -330,6 +330,18 @@ class SolicitacaoCNH(models.Model):
         verbose_name="Status"
     )
 
+    foto_cnh = models.ImageField(
+        upload_to="cnh_fotos/",
+        blank=True,
+        null=True,
+        verbose_name="Foto da CNH"
+    )
+
+    aceite_termos = models.BooleanField(
+        default=False,
+        verbose_name="Aceite dos termos de uso"
+    )
+
     data_solicitacao = models.DateTimeField(
         auto_now_add=True,
         verbose_name="Data da solicitação"

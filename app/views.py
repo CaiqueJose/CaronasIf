@@ -647,7 +647,7 @@ class EncerrarCaronaView(
             Mensagem.objects.create(
                 conversa=conversa,
                 remetente=request.user,
-                texto="🏁 O motorista encerrou esta carona! Os passageiros confirmados agora podem avaliar a viagem."
+                texto="O motorista encerrou esta carona! Os passageiros confirmados agora podem avaliar a viagem."
             )
 
         messages.success(
@@ -797,21 +797,39 @@ class VerificacaoCNHView(LoginRequiredMixin, View):
         sobrenome = request.POST.get("sobrenome", "").strip()
         usuario = request.POST.get("usuario", "").strip()
         email = request.POST.get("email", "").strip()
+        aceite_termos = request.POST.get("aceite_termos") == "on"
+        foto_cnh = request.FILES.get("foto_cnh")
 
-        if not all([nome, sobrenome, usuario, email]):
+        def _erro(msg):
             return render(
                 request,
                 "verificacao_cnh.html",
                 {
                     "enviado": False,
                     "verificado": False,
-                    "erro": "Preencha todos os campos.",
+                    "erro": msg,
                     "nome": nome,
                     "sobrenome": sobrenome,
                     "usuario": request.user.username,
                     "email": request.user.email,
                 }
             )
+
+        if not all([nome, sobrenome, usuario, email]):
+            return _erro("Preencha todos os campos.")
+
+        if not foto_cnh:
+            return _erro("Você precisa enviar uma foto da sua CNH.")
+
+        tipos_permitidos = ["image/jpeg", "image/png", "image/webp"]
+        if foto_cnh.content_type not in tipos_permitidos:
+            return _erro("Formato inválido. Envie uma imagem JPEG, PNG ou WebP.")
+
+        if foto_cnh.size > 10 * 1024 * 1024:
+            return _erro("A imagem não pode ultrapassar 10 MB.")
+
+        if not aceite_termos:
+            return _erro("Você deve aceitar os termos de uso e responsabilidade para prosseguir.")
 
         solicitacao_existente = SolicitacaoCNH.objects.filter(
             user=request.user,
@@ -827,6 +845,8 @@ class VerificacaoCNHView(LoginRequiredMixin, View):
                 sobrenome=sobrenome,
                 usuario_informado=usuario,
                 email_informado=email,
+                foto_cnh=foto_cnh,
+                aceite_termos=aceite_termos,
             )
 
         return render(
@@ -1164,6 +1184,14 @@ class EnviarMensagemView(
             texto=texto
         )
 
+        eh_ajax = (
+            request.headers.get("x-requested-with") == "XMLHttpRequest"
+            or "application/json" in request.headers.get("Accept", "")
+        )
+
+        if not eh_ajax:
+            return redirect("abrir_chat", conversa_id=conversa.id)
+
         return JsonResponse(
             {
                 "sucesso": True,
@@ -1464,7 +1492,7 @@ class SolicitarVagaView(
         Mensagem.objects.create(
             conversa=conversa,
             remetente=request.user,
-            texto="🚗 Olá! Gostaria de solicitar 1 vaga nesta carona."
+            texto="Olá! Gostaria de solicitar 1 vaga nesta carona."
         )
 
         return JsonResponse({
@@ -1554,7 +1582,7 @@ class ResponderSolicitacaoView(
             Mensagem.objects.create(
                 conversa=conversa,
                 remetente=request.user,
-                texto=f"✅ Solicitação de {solicitacao.passageiro.username} aceita! Vaga confirmada. Vagas restantes: {solicitacao.carona.vagas}"
+                texto=f"Solicitação de {solicitacao.passageiro.username} aceita! Vaga confirmada. Vagas restantes: {solicitacao.carona.vagas}"
             )
 
             return JsonResponse({
@@ -1573,9 +1601,9 @@ class ResponderSolicitacaoView(
             solicitacao.save(update_fields=["status", "motivo_recusa", "respondido_em"])
 
             if motivo_recusa:
-                texto_msg = f"❌ Solicitação de vaga recusada pelo motorista. Motivo: {motivo_recusa}"
+                texto_msg = f"Solicitação de vaga recusada pelo motorista. Motivo: {motivo_recusa}"
             else:
-                texto_msg = "❌ Solicitação de vaga recusada pelo motorista."
+                texto_msg = "Solicitação de vaga recusada pelo motorista."
 
             Mensagem.objects.create(
                 conversa=conversa,
@@ -1868,6 +1896,9 @@ class AvaliacaoView(
 
         avaliacoes = (
             Avaliacao.objects
+            .filter(
+                avaliador=request.user
+            )
             .select_related(
                 "avaliador",
                 "motorista"

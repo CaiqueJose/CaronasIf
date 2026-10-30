@@ -11,40 +11,22 @@
 
 <div class="app-container">
 
-    <aside class="sidebar">
-
+        <aside class="sidebar">
         <div class="sidebar-brand">
             <h2>Caronas IF</h2>
         </div>
 
         <nav class="sidebar-menu">
-
-            <a href="{% url 'index' %}" class="menu-item">
-                Início
-            </a>
-
-            <a href="{% url 'minhas_caronas' %}" class="menu-item">
-                Minhas Caronas
-            </a>
-
-            <a href="{% url 'chats' %}" class="menu-item">
-                Mensagens
-            </a>
-
-            {% if contexto_motorista %}
-                <a href="{% url 'criar_carona' %}" class="menu-item active">
-                    Cadastrar Carona
-                </a>
-            {% elif request.user.is_authenticated %}
-                <a href="{% url 'verificacao_cnh' %}" class="menu-item">
-                    Verificação de CNH
-                </a>
+            <a href="{% url 'index' %}" class="menu-item">Início</a>
+            <a href="{% url 'minhas_caronas' %}" class="menu-item">Minhas Caronas</a>
+            <a href="{% url 'chats' %}" class="menu-item">Mensagens</a>
+            <a href="{% url 'avaliacoes' %}" class="menu-item">Avaliações</a>
+            {% if not contexto_motorista and request.user.is_authenticated %}
+                <a href="{% url 'verificacao_cnh' %}" class="menu-item">Verificação de CNH</a>
             {% endif %}
-
         </nav>
 
         <div class="sidebar-footer">
-
             {% if request.user.is_staff or request.user.is_superuser %}
                 <a href="{% url 'gerenciar_solicitacoes_cnh' %}" class="menu-item">
                     Aprovar Motoristas
@@ -63,55 +45,27 @@
                     Sair
                 </button>
             </form>
-
         </div>
-
     </aside>
 
     <div class="main-wrapper">
 
-        <header class="top-header">
-
+                <header class="top-header">
             <div></div>
-
             <div class="user-profile">
-
-                <a href="{% url 'chats' %}"
-                   class="navbar-messages"
-                   title="Mensagens"
-                   aria-label="Mensagens">
-
-                    <svg class="message-icon"
-                         viewBox="0 0 24 24"
-                         aria-hidden="true">
-
-                        <path
-                            d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5
-                               c-1.1 0-2.15-.24-3.1-.67
-                               L4 20l1.67-4.02
-                               A7.47 7.47 0 0 1 5 11.5
-                               a7.5 7.5 0 1 1 15 0Z"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                            stroke-linecap="round"
-                            stroke-linejoin="round">
-                        </path>
-
+                <a href="{% url 'chats' %}" class="navbar-messages" title="Mensagens" aria-label="Mensagens">
+                    <svg class="message-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5 c-1.1 0-2.15-.24-3.1-.67 L4 20l1.67-4.02 A7.47 7.47 0 0 1 5 11.5 a7.5 7.5 0 1 1 15 0Z"
+                              fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
                     </svg>
-
+                    <span id="messageNotification" class="message-notification" {% if not conversas_com_mensagens_novas or conversas_com_mensagens_novas == 0 %}style="display: none;"{% endif %}>
+                        {% if conversas_com_mensagens_novas %}{{ conversas_com_mensagens_novas }}{% endif %}
+                    </span>
                 </a>
-
-                <a href="{% url 'perfil' %}"
-                   class="menu-item"
-                   style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600;">
-
-                    👤 {{ request.user.username }}
-
+                <a href="{% url 'perfil' %}" class="menu-item" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600;">
+                    {{ request.user.username }}
                 </a>
-
             </div>
-
         </header>
 
         <main class="dashboard-content">

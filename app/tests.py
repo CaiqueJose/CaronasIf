@@ -192,7 +192,7 @@ class ControleAcessoCaronaTestCase(TestCase):
         response_depois = self.client.get(reverse("minhas_caronas"))
         content_depois = response_depois.content.decode("utf-8")
         self.assertNotIn("Verificação de CNH", content_depois)
-        self.assertIn("Cadastrar Carona", content_depois)
+        self.assertIn("Criar uma carona", content_depois)
 
     def test_cenario_8_demais_itens_do_menu_e_funcionalidades_mantidos(self):
         """8. Os demais itens do menu e as funcionalidades existentes continuam funcionando."""
@@ -370,7 +370,7 @@ class ControleAcessoCaronaTestCase(TestCase):
         self.assertEqual(solicitacao.motivo_recusa, "Porta-malas cheio de encomendas.")
 
         msg = Mensagem.objects.filter(conversa=conversa).order_by("-enviado_em").first()
-        self.assertIn("❌ Solicitação de vaga recusada pelo motorista.", msg.texto)
+        self.assertIn("Solicitação de vaga recusada pelo motorista.", msg.texto)
         self.assertIn("Motivo: Porta-malas cheio de encomendas.", msg.texto)
 
         # 2. Testa recusa SEM feedback (opcional) em outra solicitação
@@ -391,5 +391,5 @@ class ControleAcessoCaronaTestCase(TestCase):
         self.assertIsNone(solicitacao2.motivo_recusa)
 
         msg2 = Mensagem.objects.filter(conversa=conversa).order_by("-enviado_em").first()
-        self.assertEqual(msg2.texto, "❌ Solicitação de vaga recusada pelo motorista.")
+        self.assertEqual(msg2.texto, "Solicitação de vaga recusada pelo motorista.")
 

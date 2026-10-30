@@ -126,6 +126,63 @@
             color: #991b1b;
         }
 
+        /* ── Foto da CNH ── */
+        .cnh-foto-wrap {
+            margin-top: 16px;
+        }
+
+        .cnh-foto-wrap strong {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .cnh-foto-wrap img {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            object-fit: contain;
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+
+        .cnh-foto-wrap img:hover {
+            transform: scale(1.02);
+        }
+
+        .cnh-foto-wrap a {
+            display: inline-block;
+            margin-top: 8px;
+            font-size: 13px;
+            color: #1565c0;
+            text-decoration: underline;
+        }
+
+        .cnh-sem-foto {
+            font-size: 13px;
+            color: #888;
+            font-style: italic;
+            margin-top: 8px;
+        }
+
+        .cnh-termos-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 20px;
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .cnh-termos-badge.nao {
+            background: #fee2e2;
+            color: #c62828;
+        }
+
         @media (max-width: 600px) {
             .approval-card {
                 padding: 18px;
@@ -147,82 +204,62 @@
 
 <div class="app-container">
 
-    <aside class="sidebar">
-
+        <aside class="sidebar">
         <div class="sidebar-brand">
             <h2>Caronas IF</h2>
         </div>
 
         <nav class="sidebar-menu">
-
-            <a href="{% url 'index' %}" class="menu-item">
-                Início
-            </a>
-
-            <a href="{% url 'minhas_caronas' %}" class="menu-item">
-                Minhas Caronas
-            </a>
-
-            <a href="{% url 'chats' %}" class="menu-item">
-                Mensagens
-            </a>
-
-            {% if contexto_motorista %}
-                <a href="{% url 'criar_carona' %}" class="menu-item">
-                    Cadastrar Carona
-                </a>
-            {% elif request.user.is_authenticated %}
-                <a href="{% url 'verificacao_cnh' %}" class="menu-item">
-                    Verificação de CNH
-                </a>
+            <a href="{% url 'index' %}" class="menu-item">Início</a>
+            <a href="{% url 'minhas_caronas' %}" class="menu-item">Minhas Caronas</a>
+            <a href="{% url 'chats' %}" class="menu-item">Mensagens</a>
+            <a href="{% url 'avaliacoes' %}" class="menu-item">Avaliações</a>
+            {% if not contexto_motorista and request.user.is_authenticated %}
+                <a href="{% url 'verificacao_cnh' %}" class="menu-item">Verificação de CNH</a>
             {% endif %}
-
         </nav>
 
         <div class="sidebar-footer">
-
             {% if request.user.is_staff or request.user.is_superuser %}
-                <a href="{% url 'gerenciar_solicitacoes_cnh' %}"
-                class="menu-item">
+                <a href="{% url 'gerenciar_solicitacoes_cnh' %}" class="menu-item active">
                     Aprovar Motoristas
                 </a>
             {% endif %}
 
-            <a href="{% url 'admin:index' %}"
-               class="menu-item"
-               target="_blank">
-                Administração Django
-            </a>
+            {% if request.user.is_staff %}
+                <a href="{% url 'admin:index' %}" class="menu-item" target="_blank">
+                    Administração
+                </a>
+            {% endif %}
 
-            <form action="{% url 'logout' %}"
-                  method="post"
-                  class="logout-form">
-
+            <form action="{% url 'logout' %}" method="post" class="logout-form">
                 {% csrf_token %}
-
                 <button type="submit" class="menu-item btn-logout">
                     Sair
                 </button>
-
             </form>
-
         </div>
-
     </aside>
 
 
     <div class="main-wrapper">
 
-        <header class="top-header">
-
+                <header class="top-header">
             <div></div>
-
             <div class="user-profile">
-                <a href="{% url 'perfil' %}" class="menu-item">
-                    👤 {{ request.user.username }}
+                <a href="{% url 'chats' %}" class="navbar-messages" title="Mensagens" aria-label="Mensagens">
+                    <svg class="message-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5 c-1.1 0-2.15-.24-3.1-.67 L4 20l1.67-4.02 A7.47 7.47 0 0 1 5 11.5 a7.5 7.5 0 1 1 15 0Z"
+                              fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                    <span id="messageNotification" class="message-notification" {% if not conversas_com_mensagens_novas or conversas_com_mensagens_novas == 0 %}style="display: none;"{% endif %}>
+                        {% if conversas_com_mensagens_novas %}{{ conversas_com_mensagens_novas }}{% endif %}
+                    </span>
+                </a>
+                <a href="{% url 'perfil' %}" class="menu-item" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600;">
+                    {{ request.user.username }}
                 </a>
             </div>
-
         </header>
 
 
@@ -292,14 +329,41 @@
                                     </span>
                                 </p>
 
+                                <p>
+                                    <strong>Termos aceitos:</strong>
+                                    {% if solicitacao.aceite_termos %}
+                                        <span class="cnh-termos-badge">✓ Sim</span>
+                                    {% else %}
+                                        <span class="cnh-termos-badge nao">✗ Não</span>
+                                    {% endif %}
+                                </p>
+
                             </div>
 
-                            <div class="approval-message">
+                            <!-- Foto da CNH -->
+                            <div class="cnh-foto-wrap">
+                                <strong>Foto da CNH:</strong>
+                                {% if solicitacao.foto_cnh %}
+                                    <a href="{{ solicitacao.foto_cnh.url }}" target="_blank">
+                                        <img
+                                            src="{{ solicitacao.foto_cnh.url }}"
+                                            alt="CNH de {{ solicitacao.nome }} {{ solicitacao.sobrenome }}"
+                                            title="Clique para abrir em tamanho real">
+                                    </a>
+                                    <a href="{{ solicitacao.foto_cnh.url }}" target="_blank">
+                                        Abrir imagem em nova aba
+                                    </a>
+                                {% else %}
+                                    <p class="cnh-sem-foto">Nenhuma foto enviada pelo usuário.</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="approval-message" style="margin-top: 18px;">
                                 <strong>Conferência da CNH:</strong>
-                                antes de aprovar, confirme que a documentação
-                                do solicitante foi recebida e conferida.
-                                O formulário, sozinho, não comprova a validade
-                                da habilitação.
+                                antes de aprovar, verifique a foto da CNH acima e
+                                confirme que a documentação é válida e pertence ao
+                                solicitante. O formulário, sozinho, não comprova a
+                                validade da habilitação.
                             </div>
 
                             <div class="approval-actions">
